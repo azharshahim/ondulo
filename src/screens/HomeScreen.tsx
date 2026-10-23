@@ -116,9 +116,9 @@ export default function HomeScreen({
     <View style={{ flex: 1, paddingTop: insets.top + 26, paddingBottom: insets.bottom + 18, paddingHorizontal: 24 }}>
       <View style={{ alignItems: 'center', marginTop: 12 }}>
         <LogoSnake />
-        <Text style={{ color: theme.text, fontSize: 35, fontWeight: '900', letterSpacing: 0.5, textAlign: 'center' }}>
-          Serpent <Text style={{ color: theme.accent }}>Puzzle</Text>
-        </Text>
+          <Text style={{ color: theme.text, fontSize: 35, fontWeight: '900', letterSpacing: 0.5, textAlign: 'center' }}>
+            Ondulo
+          </Text>
         <Text style={{ color: theme.subtext, fontSize: 14.5, fontWeight: '600', marginTop: 5, textAlign: 'center' }}>
           {t.tagline}
         </Text>

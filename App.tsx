@@ -1,4 +1,4 @@
-// ─── Serpent Puzzle : racine de l'application ──────────────────────────────
+// ─── Ondulo : racine de l'application ────────────────────────────────────
 // Navigation simple par état (Accueil / Niveaux / Jeu / Réglages), chargement
 // et sauvegarde automatique de la progression et des réglages (AsyncStorage),
 // synchronisation de l'audio (sons + musique) avec les réglages.
@@ -39,9 +39,9 @@ type Route =
 function installWebFixes() {
   if (Platform.OS !== 'web') return;
   const doc = (globalThis as { document?: Document }).document;
-  if (!doc || doc.getElementById('serpent-web-fix')) return;
+  if (!doc || doc.getElementById('ondulo-web-fix')) return;
   const style = doc.createElement('style');
-  style.id = 'serpent-web-fix';
+  style.id = 'ondulo-web-fix';
   style.textContent = [
     'html, body { height: 100dvh; overflow: hidden; overscroll-behavior: none; }',
     'body { position: fixed; inset: 0; width: 100%; }',

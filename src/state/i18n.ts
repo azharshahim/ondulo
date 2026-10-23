@@ -2,7 +2,7 @@
 export type Lang = 'fr' | 'en';
 
 const fr = {
-  appName: 'Serpent Puzzle',
+  appName: 'Ondulo',
   tagline: 'Glisse les serpents vers leur trou !',
   play: 'Jouer',
   levels: 'Niveaux',
@@ -58,7 +58,7 @@ const fr = {
 export type Dict = typeof fr;
 
 const en: Dict = {
-  appName: 'Serpent Puzzle',
+  appName: 'Ondulo',
   tagline: 'Slide the snakes into their holes!',
   play: 'Play',
   levels: 'Levels',
