@@ -16,14 +16,14 @@ export interface ColorInfo {
 }
 
 export const COLORS: Record<ColorId, ColorInfo> = {
-  corail: { id: 'corail', nameFr: 'Rouge corail', nameEn: 'Coral red', main: '#FF5964', dark: '#D63A46', light: '#FF9AA2', symbol: '●' },
-  soleil: { id: 'soleil', nameFr: 'Jaune soleil', nameEn: 'Sun yellow', main: '#FFC93C', dark: '#DEA400', light: '#FFE08A', symbol: '▲' },
-  lime: { id: 'lime', nameFr: 'Vert lime', nameEn: 'Lime green', main: '#8BD450', dark: '#5FA832', light: '#C6F79B', symbol: '■' },
-  azur: { id: 'azur', nameFr: 'Bleu azur', nameEn: 'Azure blue', main: '#3FA7FF', dark: '#2478CC', light: '#9AD1FF', symbol: '◆' },
-  violet: { id: 'violet', nameFr: 'Violet', nameEn: 'Purple', main: '#9B5DE5', dark: '#7440B8', light: '#CDA9FF', symbol: '★' },
-  rose: { id: 'rose', nameFr: 'Rose', nameEn: 'Pink', main: '#F15BB5', dark: '#C23585', light: '#FFA8D8', symbol: '♥' },
-  orange: { id: 'orange', nameFr: 'Orange', nameEn: 'Orange', main: '#FF8C42', dark: '#D96A24', light: '#FFBE8F', symbol: '✚' },
-  marron: { id: 'marron', nameFr: 'Marron', nameEn: 'Brown', main: '#B07D54', dark: '#7E5636', light: '#D9B48C', symbol: '⬢' },
+  corail: { id: 'corail', nameFr: 'Rouge corail', nameEn: 'Coral red', main: '#EF6B73', dark: '#B84A54', light: '#F8B4B9', symbol: '●' },
+  soleil: { id: 'soleil', nameFr: 'Jaune soleil', nameEn: 'Sun yellow', main: '#F2D94E', dark: '#C9A227', light: '#F9E784', symbol: '▲' },
+  lime: { id: 'lime', nameFr: 'Vert lime', nameEn: 'Lime green', main: '#9BDD4A', dark: '#74B32E', light: '#C4EE8E', symbol: '■' },
+  azur: { id: 'azur', nameFr: 'Bleu azur', nameEn: 'Azure blue', main: '#0A9BEF', dark: '#0773B8', light: '#6EC6FF', symbol: '◆' },
+  violet: { id: 'violet', nameFr: 'Violet', nameEn: 'Purple', main: '#C9A0F5', dark: '#9C72D6', light: '#E2CCFF', symbol: '★' },
+  rose: { id: 'rose', nameFr: 'Rose', nameEn: 'Pink', main: '#E89BDD', dark: '#C276B4', light: '#F6C4EE', symbol: '♥' },
+  orange: { id: 'orange', nameFr: 'Orange', nameEn: 'Orange', main: '#F0B63F', dark: '#C88A22', light: '#FBD184', symbol: '✚' },
+  marron: { id: 'marron', nameFr: 'Marron', nameEn: 'Brown', main: '#A86A55', dark: '#7F4E3A', light: '#C99B83', symbol: '⬢' },
 };
 
 export const COLOR_ORDER: ColorId[] = [
