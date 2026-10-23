@@ -17,7 +17,7 @@ import { buildState, cloneState, isWin, starsForMoves, tryMove } from '../game/e
 import { findHint, moveSourceCell } from '../game/solver';
 import { getDailyLevel, getLevel, todayKey, TOTAL_LEVELS } from '../levels/levels';
 import type { Settings } from '../state/storage';
-import type { Dict } from '../state/i18n';
+import type { Dict } from '../i18n';
 import type { Theme } from '../ui/theme';
 import Board, { type HintVisual, type SinkingInfo } from '../ui/Board';
 import Confetti from '../ui/Confetti';

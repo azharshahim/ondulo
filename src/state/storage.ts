@@ -2,7 +2,7 @@
 // Progression (étoiles, niveaux débloqués, défis quotidiens) et réglages
 // (son, musique, vibrations, langue, thème, skin, mode daltonien).
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Lang } from './i18n';
+import type { Lang } from '../i18n';
 
 export type ThemeId = 'sombre' | 'clair' | 'neon';
 export type SkinId = 'classique' | 'rayures' | 'pois' | 'degrade' | 'arcenciel';

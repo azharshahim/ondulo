@@ -4,7 +4,8 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-nat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SKINS, type Settings, type SkinId, type ThemeId } from '../state/storage';
-import type { Dict } from '../state/i18n';
+import type { Dict } from '../i18n';
+import { LANG_LIST, type Lang } from '../i18n';
 import type { Theme } from '../ui/theme';
 import {
   IconChevronLeft, IconEye, IconLock, IconMoon, IconMusic, IconSnake, IconSound,
@@ -100,9 +101,15 @@ export default function SettingsScreen({
         </Section>
 
         <Section title={t.language}>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Chip label="FR · Français" selected={settings.lang === 'fr'} onPress={() => onChange({ lang: 'fr' })} />
-            <Chip label="EN · English" selected={settings.lang === 'en'} onPress={() => onChange({ lang: 'en' })} />
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            {LANG_LIST.map((l) => (
+              <Chip
+                key={l.id}
+                label={l.name}
+                selected={settings.lang === l.id}
+                onPress={() => onChange({ lang: l.id })}
+              />
+            ))}
           </View>
         </Section>
 

@@ -7,7 +7,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import type { Dict } from '../state/i18n';
+import type { Dict } from '../i18n';
 import type { Theme } from '../ui/theme';
 import {
   IconCalendar, IconChevronRight, IconMap, IconPlay, IconSettings, IconStar,

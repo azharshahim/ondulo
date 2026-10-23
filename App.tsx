@@ -13,13 +13,21 @@ import HomeScreen from './src/screens/HomeScreen';
 import LevelMapScreen from './src/screens/LevelMapScreen';
 import GameScreen from './src/screens/GameScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
-import { STRINGS } from './src/state/i18n';
+import {
+  loadLang, loadDict, isRTL, type Lang, type Dict,
+} from './src/i18n';
 import {
   loadProgress, loadSettings, saveProgress, saveSettings, totalStars,
   type Progress, type Settings,
 } from './src/state/storage';
 import { todayKey, TOTAL_LEVELS } from './src/levels/levels';
 import { sound } from './src/audio/sound';
+
+/** Variable de module pour la langue activée (chargement asynchrone). */
+let _langCached: Lang | null = null;
+function loadLangCached(): Lang {
+  return _langCached ?? 'en';
+}
 
 type Route =
   | { name: 'home' }
@@ -62,18 +70,32 @@ export default function App() {
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const [settings, setSettings] = useState<Settings | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
+  const [lang, setLang] = useState<Lang>('en');
+  const [dict, setDict] = useState<Dict>({});
 
   // Verrouillage de la page web (défilement, zoom, hauteur dynamique).
   useEffect(() => { installWebFixes(); }, []);
 
-  // Chargement initial de la sauvegarde.
+  // Chargement initial : langue (détection automatique, repli anglais),
+  // dictionnaire de traduction (JSON) et sauvegarde.
   useEffect(() => {
     (async () => {
-      const [s, p] = await Promise.all([loadSettings(), loadProgress()]);
+      const [lang, s, p] = await Promise.all([loadLang(), loadSettings(), loadProgress()]);
+      setLang(lang);
+      const dict = await loadDict(lang);
+      setDict(dict);
       setSettings(s);
       setProgress(p);
     })();
   }, []);
+
+  // Direction RTL (arabe) sur le web : injecte dir="rtl" sur le document.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !lang) return;
+    const dir = isRTL(lang) ? 'rtl' : 'ltr';
+    const doc = (globalThis as { document?: Document }).document;
+    if (doc) doc.documentElement.setAttribute('dir', dir);
+  }, [lang]);
 
   // L'audio suit les réglages en permanence.
   useEffect(() => {
@@ -119,7 +141,7 @@ export default function App() {
     () => THEMES[settings?.theme ?? 'sombre'],
     [settings?.theme],
   );
-  const t = STRINGS[settings?.lang ?? 'fr'];
+  const t = dict;
   const stars = progress ? totalStars(progress) : 0;
   const dailyDone = !!progress?.daily[todayKey()];
 
