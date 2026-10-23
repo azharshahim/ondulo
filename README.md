@@ -7,6 +7,10 @@ dans l'ordre des mouvements. Quand tous les serpents sont rentrés, le niveau
 est gagné, avec 1 à 3 étoiles selon le nombre de coups (comparé à l'optimal
 calculé par le solveur).
 
+🎮 **Démo web jouable (GitHub Pages)** : https://azharshahim.github.io/serpent-puzzle/
+📱 **Mobile** : voir « Tester immédiatement » ci-dessous (Expo Go) ; publication
+EAS Update décrite en fin de document.
+
 ## Tester immédiatement (Expo Go, sans compilation native)
 
 Prérequis : Node.js ≥ 20 et l'application **Expo Go** sur le téléphone
@@ -109,6 +113,25 @@ src/
 tools/        validation hors-ligne des 60 niveaux (npm run test:levels)
 assets/sounds bruitages et musique générés sur mesure (WAV)
 ```
+
+## Publier une mise à jour mobile avec EAS Update
+
+Le projet est déjà préparé (`expo-updates` installé, `runtimeVersion` aligné
+sur le SDK). Il faut un compte Expo gratuit (impossible à créer pour vous) :
+
+```bash
+git clone https://github.com/azharshahim/serpent-puzzle.git
+cd serpent-puzzle
+npm install
+npx eas-cli@latest login              # ou créer un compte sur https://expo.dev
+npx eas-cli@latest init               # associe le projet à votre compte
+npx eas-cli@latest update:configure   # active les mises à jour OTA
+npx eas-cli@latest update --branch preview --message "Premier test"
+```
+
+La dernière commande affiche un **QR code et un lien** (page du projet sur
+expo.dev) : scannez-le avec **Expo Go** pour ouvrir le jeu sur le téléphone,
+sans passer par un serveur local.
 
 ## Construire l'APK / l'IPA avec EAS Build
 
