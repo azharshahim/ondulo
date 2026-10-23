@@ -11,13 +11,13 @@
 //    la case du trou (il ne dépasse jamais du plateau) ;
 //  • cases bleu très clair biseautées sur fond sombre dégradé.
 // Règles : le moteur (engine.ts) est la seule source de vérité. Le pas de
-// glisser est choisi par engine.nextDragStep et chaque franchissement de
+// glisser est choisi par engine.evaluateDragStep et chaque franchissement de
 // case est validé par engine.tryMove via `attemptMove`. L'extrémité
 // affichée ne suit le doigt que dans un rayon bridé autour de sa case
 // logique : visuellement, un serpent ne peut donc jamais recouvrir un
 // autre serpent, même doigt rapide ou bloqué.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-worklets';
 import Animated, {
@@ -30,7 +30,7 @@ import type {
   Cell, End, GameState, HoleState, LevelDef, MoveResult, SnakeState,
 } from '../game/types';
 import { COLORS } from '../game/colors';
-import { nextDragStep } from '../game/engine';
+import { evaluateDragStep } from '../game/engine';
 import { ColorSymbol, IconCheck } from './icons';
 import type { SkinId } from '../state/storage';
 import type { Theme } from './theme';
@@ -64,6 +64,9 @@ interface BoardProps {
 }
 
 type Pt = { x: number; y: number };
+
+/** Regard au repos (référence stable pour React.memo). */
+const IDLE_LOOK = { dx: 0, dy: 0.3 };
 
 const RAINBOW = ['#EF6B73', '#F0B63F', '#F2D94E', '#9BDD4A', '#0A9BEF', '#C9A0F5'];
 
@@ -194,13 +197,19 @@ function HeadEyes({ head, neck, cell, look, faded }: {
   );
 }
 
-// ─── Corps du serpent en tube SVG ──────────────────────────────────────────
-function SnakeTube({
+// ─── Corps du serpent en tube SVG (mémoïsé : ne se re-rend que si SES
+// points changent, pas à chaque image des autres serpents) ────────────────
+const SnakeTube = React.memo(function SnakeTube({
   snake, points, cell, boardWidth, boardHeight, skin, colorblind, look, moving, sinkingSnake,
+  shakeSignal, reduceMotion,
 }: {
   snake: SnakeState; points: Pt[]; cell: number; boardWidth: number; boardHeight: number;
   skin: SkinId; colorblind: boolean; look: { dx: number; dy: number };
   moving: boolean; sinkingSnake: boolean;
+  /** Incrémenté à chaque refus de pas : secousse ciblée de CE serpent. */
+  shakeSignal: number;
+  /** Réglage système « réduire les animations » : aucune secousse. */
+  reduceMotion: boolean;
 }) {
   const info = COLORS[snake.color];
   const w = cell * 0.58; // largeur du corps = 58 % d'une case
@@ -222,6 +231,8 @@ function SnakeTube({
   // Respiration douce + squash & stretch léger pendant le déplacement.
   const breath = useSharedValue(1);
   const squash = useSharedValue(1);
+  // Secousse ciblée : 2,5 px max, 150 ms, uniquement sur CE serpent.
+  const shake = useSharedValue(0);
   useEffect(() => {
     breath.value = withRepeat(
       withTiming(1.018, { duration: 1250, easing: Easing.inOut(Easing.sin) }), -1, true,
@@ -230,8 +241,18 @@ function SnakeTube({
   useEffect(() => {
     squash.value = withTiming(moving ? 1.045 : 1, { duration: moving ? 110 : 220 });
   }, [moving, squash]);
+  useEffect(() => {
+    if (!shakeSignal || reduceMotion) return;
+    shake.value = withSequence(
+      withTiming(-2.5, { duration: 35 }),
+      withTiming(2.5, { duration: 40 }),
+      withTiming(-1.2, { duration: 35 }),
+      withTiming(0, { duration: 40 }),
+    );
+  }, [shakeSignal, reduceMotion, shake]);
   const wrapStyle = useAnimatedStyle(() => ({
     transform: [
+      { translateX: shake.value },
       { scaleX: breath.value * squash.value },
       { scaleY: breath.value * (1 - (squash.value - 1) * 0.7) },
     ],
@@ -333,43 +354,49 @@ function SnakeTube({
       )}
     </Animated.View>
   );
-}
+});
 
 // ─── Un trou : anneau plus fin, intérieur bien sombre, halo contenu ───────
 // Le halo est dimensionné pour rester DANS la case du trou (≤ 0,97 case
 // au maximum de sa pulsation) : il ne dépasse jamais du plateau.
-function HoleView({ hole, cell, near }: {
+const HoleView = React.memo(function HoleView({ hole, cell, near }: {
   hole: HoleState; cell: number; near: boolean;
 }) {
   const info = COLORS[hole.color];
-  const pulse = useSharedValue(1);
+  const pulse = useSharedValue(0.25);
   useEffect(() => {
+    // Pulsation par l'OPACITÉ uniquement (taille constante) : le halo ne
+    // génère aucun micro-décalage de mise en page (CLS).
     pulse.value = withRepeat(
-      withTiming(near ? 1.16 : 1.07, { duration: near ? 380 : 1000, easing: Easing.inOut(Easing.sin) }),
+      withTiming(near ? 0.55 : 0.34, { duration: near ? 380 : 1000, easing: Easing.inOut(Easing.sin) }),
       -1, true,
     );
   }, [near, pulse]);
   const glowStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse.value }],
-    opacity: near ? 0.5 : 0.25,
+    opacity: pulse.value,
   }));
   const ctr = centerOf(hole.cell, cell);
   const size = cell * 0.8;
   const inner = size * 0.6;
   const glowSize = cell * 0.84;
   if (hole.filled) {
+    // Même géométrie externe que l'état non rempli (cell × cell) : le
+    // remplissage du trou ne change la taille d'aucun élément (CLS = 0).
     return (
       <View pointerEvents="none" style={{
-        position: 'absolute', left: ctr.x - size / 2, top: ctr.y - size / 2,
-        width: size, height: size, borderRadius: size / 2,
-        backgroundColor: info.dark, alignItems: 'center', justifyContent: 'center',
-        opacity: 0.85, zIndex: 2,
+        position: 'absolute', left: ctr.x - cell / 2, top: ctr.y - cell / 2,
+        width: cell, height: cell, zIndex: 2, alignItems: 'center', justifyContent: 'center',
       }}>
         <View style={{
-          width: inner, height: inner, borderRadius: inner / 2, backgroundColor: '#081728',
-          alignItems: 'center', justifyContent: 'center',
+          width: size, height: size, borderRadius: size / 2,
+          backgroundColor: info.dark, alignItems: 'center', justifyContent: 'center', opacity: 0.9,
         }}>
-          <IconCheck size={cell * 0.3} color={info.light} />
+          <View style={{
+            width: inner, height: inner, borderRadius: inner / 2, backgroundColor: '#081728',
+            alignItems: 'center', justifyContent: 'center',
+          }}>
+            <IconCheck size={cell * 0.3} color={info.light} />
+          </View>
         </View>
       </View>
     );
@@ -409,7 +436,46 @@ function HoleView({ hole, cell, near }: {
       </View>
     </View>
   );
-}
+});
+
+// ─── Couche statique des cases (mémoïsée : jamais re-rendue pendant un
+// glisser, elle ne dépend que du niveau, du thème et de la taille) ────────
+const CellsLayer = React.memo(function CellsLayer({ level, theme, cell }: {
+  level: LevelDef; theme: Theme; cell: number;
+}) {
+  return (
+    <>
+      {level.grid.map((row, r) =>
+        row.map((v, c) =>
+          v === 1 ? (
+            <View key={`cell-${r}-${c}`} pointerEvents="none" style={{
+              position: 'absolute', left: c * cell + 1.5, top: r * cell + 1.5,
+              width: cell - 3, height: cell - 3, borderRadius: cell * 0.17,
+              backgroundColor: (r + c) % 2 === 0 ? '#EAF4FF' : '#E1EFFF',
+              borderWidth: 1,
+              borderTopColor: 'rgba(255,255,255,0.95)',
+              borderLeftColor: 'rgba(255,255,255,0.95)',
+              borderBottomColor: 'rgba(94,140,190,0.30)',
+              borderRightColor: 'rgba(94,140,190,0.30)',
+              shadowColor: '#0A2540', shadowOpacity: 0.16, shadowRadius: 3,
+              shadowOffset: { width: 0, height: 2 },
+              overflow: 'hidden',
+            }}>
+              <View style={{
+                position: 'absolute', top: 1, left: 3, right: 3, height: '36%',
+                borderRadius: cell * 0.12, backgroundColor: 'rgba(255,255,255,0.35)',
+              }} />
+              <View style={{
+                position: 'absolute', bottom: 0, left: 0, right: 0, height: '22%',
+                backgroundColor: 'rgba(110,165,220,0.10)',
+              }} />
+            </View>
+          ) : null,
+        ),
+      )}
+    </>
+  );
+});
 
 // ─── Plateau complet ───────────────────────────────────────────────────────
 export default function Board(props: BoardProps) {
@@ -429,68 +495,110 @@ export default function Board(props: BoardProps) {
   const [movingId, setMovingId] = useState<string | null>(null);
   const dragRef = useRef<{ snakeId: string; end: End } | null>(null);
   const dragPtRef = useRef<{ snakeId: string; end: End; x: number; y: number } | null>(null);
+  const lastDragUiRef = useRef(0);
   const lastBlockedRef = useRef<{ key: string; at: number }>({ key: '', at: 0 });
   const trailId = useRef(0);
   const trailTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const movingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const shakeX = useSharedValue(0);
-  const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shakeX.value }] }));
+  // Réglage système « réduire les animations » (secousse désactivée si oui).
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((v) => { if (alive) setReduceMotion(v); })
+      .catch(() => { /* ignore */ });
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', (v) => setReduceMotion(v));
+    return () => { alive = false; sub.remove(); };
+  }, []);
 
-  // ── Interpolation fluide des points du corps (suivi avec décalage) ──
+  // Secousse ciblée : identifiant du serpent bloqué + compteur de déclenchements.
+  const [blockedShake, setBlockedShake] = useState<{ snakeId: string; n: number }>({ snakeId: '', n: 0 });
+
+  // ── Interpolation fluide PAR SERPENT (suivi avec décalage) ──
+  // Seuls les serpents dont la cible change sont animés et re-rendus :
+  // les autres conservent la même référence de points (React.memo) et le
+  // Board ne fait aucun setState tant qu'aucune animation n'est active.
   const [visual, setVisual] = useState<Record<string, Pt[]>>(() => targetsFromState(state, cell, null));
   const visualRef = useRef(visual);
-  const animRef = useRef<{
-    raf: number; from: Record<string, Pt[]>; to: Record<string, Pt[]>;
-    start: number; duration: number; delays: Record<string, number[]>;
-  } | null>(null);
+  type SnakeAnim = { from: Pt[]; to: Pt[]; start: number; duration: number; delays: number[] };
+  const animsRef = useRef(new Map<string, SnakeAnim>());
+  const rafIdRef = useRef(0);
   const sinkKeyRef = useRef<string | null>(null);
   const sinkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const rafOf = () => (globalThis as {
+    requestAnimationFrame?: (cb: () => void) => number;
+    cancelAnimationFrame?: (id: number) => void;
+  });
+
+  const runFrame = useCallback(() => {
+    rafIdRef.current = 0;
+    const anims = animsRef.current;
+    if (!anims.size) return;
+    const now = Date.now();
+    const next: Record<string, Pt[]> = { ...visualRef.current };
+    let anyActive = false;
+    for (const [id, anim] of Array.from(anims.entries())) {
+      const pts = anim.to.map((tp, i) => {
+        const fp = anim.from[i] ?? tp;
+        const raw = (now - anim.start - (anim.delays[i] ?? 0)) / anim.duration;
+        return raw >= 1 ? tp : {
+          x: lerp(fp.x, tp.x, easeOut(clamp01(raw))),
+          y: lerp(fp.y, tp.y, easeOut(clamp01(raw))),
+        };
+      });
+      next[id] = pts;
+      const done = anim.to.every((_, i) => (now - anim.start - (anim.delays[i] ?? 0)) / anim.duration >= 1);
+      if (done) anims.delete(id);
+      else anyActive = true;
+    }
+    visualRef.current = next;
+    setVisual(next);
+    const raf = rafOf().requestAnimationFrame;
+    if (anyActive && raf) rafIdRef.current = raf(runFrame);
+  }, []);
 
   const animateTo = useCallback((
     to: Record<string, Pt[]>, duration: number, delays: Record<string, number[]>,
   ) => {
-    const rafGlobal = (globalThis as { requestAnimationFrame?: (cb: () => void) => number }).requestAnimationFrame;
-    if (!rafGlobal) {
+    const raf = rafOf().requestAnimationFrame;
+    if (!raf) {
       visualRef.current = to;
       setVisual(to);
       return;
     }
-    if (animRef.current) cancelAnimationFrame(animRef.current.raf);
-    const anim = {
-      raf: 0,
-      from: visualRef.current,
-      to,
-      start: Date.now(),
-      duration,
-      delays,
-    };
-    animRef.current = anim;
-    const tick = () => {
-      if (animRef.current !== anim) return;
-      const elapsed = Date.now() - anim.start;
-      const next: Record<string, Pt[]> = {};
-      let done = true;
-      for (const [id, toPts] of Object.entries(anim.to)) {
-        const fromPts = anim.from[id];
-        const dly = anim.delays[id] ?? [];
-        next[id] = toPts.map((tp, i) => {
-          if (!fromPts || !fromPts[i]) return tp;
-          const p = easeOut(clamp01((elapsed - (dly[i] ?? 0)) / anim.duration));
-          if (p < 1) done = false;
-          return { x: lerp(fromPts[i].x, tp.x, p), y: lerp(fromPts[i].y, tp.y, p) };
-        });
+    const now = Date.now();
+    let snapped: Record<string, Pt[]> | null = null;
+    for (const [id, toPts] of Object.entries(to)) {
+      const cur = visualRef.current[id];
+      if (!cur || cur.length !== toPts.length) {
+        // Nouveau serpent / longueur différente : position immédiate.
+        (snapped ??= { ...visualRef.current })[id] = toPts;
+        animsRef.current.delete(id);
+        continue;
       }
-      visualRef.current = next;
-      setVisual(next);
-      if (!done) anim.raf = rafGlobal(tick);
-      else animRef.current = null;
-    };
-    anim.raf = rafGlobal(tick);
-  }, []);
+      const alreadyThere = toPts.every(
+        (tp, i) => Math.abs(tp.x - cur[i].x) < 0.05 && Math.abs(tp.y - cur[i].y) < 0.05,
+      );
+      if (alreadyThere) {
+        animsRef.current.delete(id);
+        continue;
+      }
+      animsRef.current.set(id, { from: cur, to: toPts, start: now, duration, delays: delays[id] ?? [] });
+    }
+    if (snapped) {
+      visualRef.current = snapped;
+      setVisual(snapped);
+    }
+    if (animsRef.current.size && !rafIdRef.current) {
+      rafIdRef.current = raf(runFrame);
+    }
+  }, [runFrame]);
 
   useEffect(() => () => {
-    if (animRef.current) cancelAnimationFrame(animRef.current.raf);
+    const g = rafOf();
+    if (rafIdRef.current && g.cancelAnimationFrame) g.cancelAnimationFrame(rafIdRef.current);
     if (sinkTimeoutRef.current) clearTimeout(sinkTimeoutRef.current);
   }, []);
 
@@ -533,16 +641,17 @@ export default function Board(props: BoardProps) {
     animateTo(to, dragging ? 95 : 160, delays);
   }, [state, drag, sinking, cell, animateTo]);
 
-  const triggerBlocked = useCallback((key: string) => {
+  // Retour négatif CIBLÉ : secousse de 2,5 px / 150 ms sur le seul serpent
+  // bloqué (+ son d'erreur), au plus une fois par 450 ms et par serpent.
+  // N'est appelé que lorsqu'un pas vers une case voisine a réellement été
+  // refusé par le moteur (évaluation 'blocked' d'evaluateDragStep).
+  const triggerBlocked = useCallback((snakeId: string) => {
     const now = Date.now();
-    if (lastBlockedRef.current.key === key && now - lastBlockedRef.current.at < 450) return;
-    lastBlockedRef.current = { key, at: now };
-    shakeX.value = withSequence(
-      withTiming(-7, { duration: 55 }), withTiming(7, { duration: 55 }),
-      withTiming(-4, { duration: 45 }), withTiming(0, { duration: 45 }),
-    );
+    if (lastBlockedRef.current.key === snakeId && now - lastBlockedRef.current.at < 450) return;
+    lastBlockedRef.current = { key: snakeId, at: now };
+    setBlockedShake((prev) => ({ snakeId, n: prev.n + 1 }));
     propsRef.current.onBlockedFx();
-  }, [shakeX]);
+  }, []);
 
   // ── Logique de glisser (exécutée sur le thread JS via runOnJS) ──
   const handleStart = useCallback((x: number, y: number) => {
@@ -572,33 +681,45 @@ export default function Board(props: BoardProps) {
     const active = dragRef.current;
     if (!active || propsRef.current.sinking) return;
     dragPtRef.current = { snakeId: active.snakeId, end: active.end, x, y };
-    setDrag({ snakeId: active.snakeId, end: active.end, x, y });
+    // setDrag limité à ~60/s (la position exacte reste dans dragPtRef).
+    const nowUi = Date.now();
+    if (nowUi - lastDragUiRef.current >= 16) {
+      lastDragUiRef.current = nowUi;
+      setDrag({ snakeId: active.snakeId, end: active.end, x, y });
+    }
     const finger = { r: Math.floor(y / cell), c: Math.floor(x / cell) };
     const lvl = propsRef.current.level;
-    // Avance STRICTEMENT case par case vers le doigt : le choix du pas est
-    // délégué à engine.nextDragStep (fonction partagée avec les tests
-    // automatisés) et chaque pas est validé par le moteur via attemptMove.
-    // Au premier pas interdit, on s'arrête : le serpent reste bloqué là,
-    // même si le doigt continue plus loin.
+    // Avance STRICTEMENT case par case vers le doigt : chaque pas est
+    // évalué par engine.evaluateDragStep (fonction partagée avec les
+    // tests) puis validé par le moteur via attemptMove. Au premier pas
+    // interdit, on s'arrête : le serpent reste bloqué là, même si le
+    // doigt continue plus loin.
     for (let step = 0; step < 6; step++) {
       const st = latestRef.current;
       const snake = st.snakes.find((s) => s.id === active.snakeId);
       if (!snake || snake.absorbed) { dragRef.current = null; dragPtRef.current = null; return; }
-      const stepMove = nextDragStep(lvl, st, active.snakeId, active.end, finger);
-      if (!stepMove) {
-        triggerBlocked(`${active.snakeId}-${active.end}-bloque`);
+      const ev = evaluateDragStep(lvl, st, active.snakeId, active.end, finger);
+      if (ev.kind === 'arrived' || ev.kind === 'no-step') {
+        // Doigt encore sur la case du serpent, ou aucun pas rapprochant :
+        // aucun pas demandé → aucune secousse, aucun son d'erreur.
         break;
       }
-      const res = propsRef.current.attemptMove(stepMove.snakeId, stepMove.end, stepMove.target);
+      if (ev.kind === 'blocked') {
+        // Pas vers une case voisine réellement refusé (occupée, hors
+        // grille, zone vide, mauvais trou) : retour ciblé sur ce serpent.
+        triggerBlocked(active.snakeId);
+        break;
+      }
+      const res = propsRef.current.attemptMove(ev.move.snakeId, ev.move.end, ev.move.target);
       if (res.status === 'moved') {
         latestRef.current = res.state;
         propsRef.current.onStep();
         setMovingId(active.snakeId);
         if (movingTimer.current) clearTimeout(movingTimer.current);
         movingTimer.current = setTimeout(() => setMovingId(null), 240);
-        const ctr = centerOf(stepMove.target, cell);
+        const ctr = centerOf(ev.move.target, cell);
         const info = COLORS[snake.color];
-        setTrail((prev) => [...prev.slice(-7), { id: ++trailId.current, x: ctr.x, y: ctr.y, color: info.main }]);
+        setTrail((prev) => [...prev.slice(-5), { id: ++trailId.current, x: ctr.x, y: ctr.y, color: info.main }]);
         if (trailTimer.current) clearTimeout(trailTimer.current);
         trailTimer.current = setTimeout(() => setTrail([]), 650);
         continue;
@@ -610,7 +731,7 @@ export default function Board(props: BoardProps) {
         return;
       }
       // Le moteur a refusé le pas proposé : on s'arrête immédiatement.
-      triggerBlocked(`${active.snakeId}-${active.end}-refuse`);
+      triggerBlocked(active.snakeId);
       break;
     }
   }, [cell, triggerBlocked]);
@@ -639,6 +760,7 @@ export default function Board(props: BoardProps) {
   );
 
   // Regard des têtes : vers le doigt pendant le glisser, sinon droit devant.
+  // (objet constant au repos pour ne pas invalider React.memo des serpents)
   const lookFor = (snake: SnakeState) => {
     if (drag && drag.snakeId === snake.id && snake.cells.length) {
       const head = centerOf(snake.cells[0], cell);
@@ -646,14 +768,21 @@ export default function Board(props: BoardProps) {
       const m = Math.max(1, Math.hypot(dx, dy));
       return { dx: dx / m, dy: dy / m };
     }
-    return { dx: 0, dy: 0.3 };
+    return IDLE_LOOK;
   };
 
   const hintColor = hint ? COLORS[state.snakes.find((s) => s.id === hint.snakeId)?.color ?? 'corail'] : null;
 
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View testID="game-board" style={[{ width: boardWidth, height: boardHeight, alignSelf: 'center' }, shakeStyle]}>
+      <Animated.View
+        testID="game-board"
+        style={{
+          width: boardWidth, height: boardHeight, alignSelf: 'center',
+          // Page web mobile : aucun geste navigateur pendant le glisser.
+          touchAction: 'none', userSelect: 'none',
+        } as object}
+      >
         {/* Cadre sombre du plateau (contenu dans la largeur du plateau) */}
         <View pointerEvents="none" style={{
           position: 'absolute', left: 0, top: 0,
@@ -664,35 +793,8 @@ export default function Board(props: BoardProps) {
           shadowOffset: { width: 0, height: 6 },
         }} />
 
-        {/* Cases bleu très clair, biseautées */}
-        {level.grid.map((row, r) =>
-          row.map((v, c) =>
-            v === 1 ? (
-              <View key={`cell-${r}-${c}`} pointerEvents="none" style={{
-                position: 'absolute', left: c * cell + 1.5, top: r * cell + 1.5,
-                width: cell - 3, height: cell - 3, borderRadius: cell * 0.17,
-                backgroundColor: (r + c) % 2 === 0 ? '#EAF4FF' : '#E1EFFF',
-                borderWidth: 1,
-                borderTopColor: 'rgba(255,255,255,0.95)',
-                borderLeftColor: 'rgba(255,255,255,0.95)',
-                borderBottomColor: 'rgba(94,140,190,0.30)',
-                borderRightColor: 'rgba(94,140,190,0.30)',
-                shadowColor: '#0A2540', shadowOpacity: 0.16, shadowRadius: 3,
-                shadowOffset: { width: 0, height: 2 },
-                overflow: 'hidden',
-              }}>
-                <View style={{
-                  position: 'absolute', top: 1, left: 3, right: 3, height: '36%',
-                  borderRadius: cell * 0.12, backgroundColor: 'rgba(255,255,255,0.35)',
-                }} />
-                <View style={{
-                  position: 'absolute', bottom: 0, left: 0, right: 0, height: '22%',
-                  backgroundColor: 'rgba(110,165,220,0.10)',
-                }} />
-              </View>
-            ) : null,
-          ),
-        )}
+        {/* Cases bleu très clair, biseautées (couche mémoïsée) */}
+        <CellsLayer level={level} theme={theme} cell={cell} />
 
         {/* Trous */}
         {state.trous.map((hole) => {
@@ -749,6 +851,8 @@ export default function Board(props: BoardProps) {
             look={lookFor(snake)}
             moving={movingId === snake.id || drag?.snakeId === snake.id}
             sinkingSnake={sinking?.snakeId === snake.id}
+            shakeSignal={blockedShake.snakeId === snake.id ? blockedShake.n : 0}
+            reduceMotion={reduceMotion}
           />
         ))}
       </Animated.View>

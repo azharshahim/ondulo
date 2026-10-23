@@ -3,7 +3,7 @@
 // et sauvegarde automatique de la progression et des réglages (AsyncStorage),
 // synchronisation de l'audio (sons + musique) avec les réglages.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -27,10 +27,44 @@ type Route =
   | { name: 'settings' }
   | { name: 'game'; levelNumber: number | null }; // null = défi quotidien
 
+/**
+ * Durcissement de la page web mobile (injecté une seule fois) :
+ *  • html/body : overflow hidden, overscroll-behavior none (plus de
+ *    pull-to-refresh ni de défilement de la page) ;
+ *  • hauteur 100dvh (et non 100vh) : la hauteur ne bouge plus quand la
+ *    barre d'adresse du navigateur se réduit ;
+ *  • viewport : zoom par pincement désactivé pendant le jeu ;
+ *  • tap highlight transparent.
+ */
+function installWebFixes() {
+  if (Platform.OS !== 'web') return;
+  const doc = (globalThis as { document?: Document }).document;
+  if (!doc || doc.getElementById('serpent-web-fix')) return;
+  const style = doc.createElement('style');
+  style.id = 'serpent-web-fix';
+  style.textContent = [
+    'html, body { height: 100dvh; overflow: hidden; overscroll-behavior: none; }',
+    'body { position: fixed; inset: 0; width: 100%; }',
+    '#root { height: 100dvh; }',
+    '* { -webkit-tap-highlight-color: transparent; }',
+  ].join('\n');
+  doc.head.appendChild(style);
+  const meta = doc.querySelector('meta[name="viewport"]');
+  if (meta) {
+    meta.setAttribute(
+      'content',
+      'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
+    );
+  }
+}
+
 export default function App() {
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const [settings, setSettings] = useState<Settings | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
+
+  // Verrouillage de la page web (défilement, zoom, hauteur dynamique).
+  useEffect(() => { installWebFixes(); }, []);
 
   // Chargement initial de la sauvegarde.
   useEffect(() => {

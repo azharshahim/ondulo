@@ -179,6 +179,58 @@ export function applyMove(level: LevelDef, state: GameState, move: Move): GameSt
 }
 
 /**
+ * Évaluation complète d'un pas de glisser vers une case doigt :
+ *  - 'arrived' : le doigt est encore sur la case de l'extrémité (aucun pas
+ *    demandé → aucun retour négatif) ;
+ *  - 'step' : prochain pas légal (validé par tryMove) ;
+ *  - 'blocked' : un pas vers le doigt a été demandé et refusé par le
+ *    moteur (case occupée, hors grille, zone vide, mauvais trou), avec la
+ *    raison du premier refus — c'est le seul cas où l'UI doit réagir
+ *    (secousse ciblée + son d'erreur) ;
+ *  - 'no-step' : aucun pas ne rapproche du doigt (il faudrait s'éloigner).
+ */
+export type DragStepEvaluation =
+  | { kind: 'arrived' }
+  | { kind: 'step'; move: Move }
+  | { kind: 'blocked'; target: Cell; reason: string }
+  | { kind: 'no-step' };
+
+export function evaluateDragStep(
+  level: LevelDef,
+  state: GameState,
+  snakeId: string,
+  end: End,
+  fingerCell: Cell,
+): DragStepEvaluation {
+  const snake = state.snakes.find((s) => s.id === snakeId);
+  if (!snake || snake.absorbed) return { kind: 'no-step' };
+  const from = getEndCell(snake, end);
+  const currentDist = manhattan(from, fingerCell);
+  if (currentDist === 0) return { kind: 'arrived' };
+  const candidates = DIRS
+    .map((d) => ({ r: from.r + d.dr, c: from.c + d.dc }))
+    .filter((t) => manhattan(t, fingerCell) < currentDist)
+    .sort((a, b) => {
+      const byDist = manhattan(a, fingerCell) - manhattan(b, fingerCell);
+      if (byDist !== 0) return byDist;
+      // À distance égale, privilégier l'axe dominant du glisser.
+      const dominantR = Math.abs(fingerCell.r - from.r) >= Math.abs(fingerCell.c - from.c);
+      const score = (t: Cell) => (dominantR ? (t.r !== from.r ? 0 : 1) : (t.c !== from.c ? 0 : 1));
+      return score(a) - score(b);
+    });
+  if (!candidates.length) return { kind: 'no-step' };
+  let firstBlocked: { target: Cell; reason: string } | null = null;
+  for (const target of candidates) {
+    const res = tryMove(level, state, snakeId, end, target);
+    if (res.status !== 'blocked') return { kind: 'step', move: res.move };
+    if (!firstBlocked) firstBlocked = { target, reason: res.reason };
+  }
+  return firstBlocked
+    ? { kind: 'blocked', target: firstBlocked.target, reason: firstBlocked.reason }
+    : { kind: 'no-step' };
+}
+
+/**
  * Prochain pas d'un glisser vers une case doigt : fonction PARTAGÉE entre
  * l'interface (Board) et les tests. Elle ne propose que des pas qui
  * rapprochent l'extrémité de la case visée, et chaque pas candidat est
@@ -192,27 +244,8 @@ export function nextDragStep(
   end: End,
   fingerCell: Cell,
 ): Move | null {
-  const snake = state.snakes.find((s) => s.id === snakeId);
-  if (!snake || snake.absorbed) return null;
-  const from = getEndCell(snake, end);
-  const currentDist = manhattan(from, fingerCell);
-  if (currentDist === 0) return null;
-  const candidates = DIRS
-    .map((d) => ({ r: from.r + d.dr, c: from.c + d.dc }))
-    .filter((t) => manhattan(t, fingerCell) < currentDist)
-    .sort((a, b) => {
-      const byDist = manhattan(a, fingerCell) - manhattan(b, fingerCell);
-      if (byDist !== 0) return byDist;
-      // À distance égale, privilégier l'axe dominant du glisser.
-      const dominantR = Math.abs(fingerCell.r - from.r) >= Math.abs(fingerCell.c - from.c);
-      const score = (t: Cell) => (dominantR ? (t.r !== from.r ? 0 : 1) : (t.c !== from.c ? 0 : 1));
-      return score(a) - score(b);
-    });
-  for (const target of candidates) {
-    const res = tryMove(level, state, snakeId, end, target);
-    if (res.status !== 'blocked') return res.move;
-  }
-  return null;
+  const ev = evaluateDragStep(level, state, snakeId, end, fingerCell);
+  return ev.kind === 'step' ? ev.move : null;
 }
 
 export interface DragResult {

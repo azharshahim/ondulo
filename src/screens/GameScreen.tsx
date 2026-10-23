@@ -246,7 +246,7 @@ export default function GameScreen({
   return (
     <View style={{ flex: 1, paddingTop: insets.top + 6, paddingBottom: insets.bottom + 8 }}>
       {/* Barre du haut */}
-      <View style={styles.topBar}>
+      <View style={styles.topBar} testID="top-bar">
         <Pressable
           onPress={() => { sound.play('click'); setPaused(true); }}
           style={[styles.iconBtn, { backgroundColor: theme.panel, borderColor: theme.panelBorder }]}
@@ -278,16 +278,29 @@ export default function GameScreen({
         </View>
       </View>
 
-      {gs.moves === 0 && !victory && (
-        <Text style={{ color: theme.subtext, textAlign: 'center', fontSize: 12, marginTop: 2, paddingHorizontal: 24 }}>
+      {/* Zone texte à HAUTEUR FIXE : toujours rendue, seule l'opacité
+          change. Le plateau (centré dans le flex:1 ci-dessous) ne peut
+          donc plus être déplacé par l'apparition/disparition des textes. */}
+      <View style={styles.fixedTextZone} testID="text-zone">
+        <Text
+          style={{
+            position: 'absolute', left: 24, right: 24, textAlign: 'center',
+            color: theme.subtext, fontSize: 12, lineHeight: 17,
+            opacity: gs.moves === 0 && !victory && !notice ? 1 : 0,
+          }}
+        >
           {levelNumber === 1 ? t.howTo : t.dragHint}
         </Text>
-      )}
-      {notice && (
-        <Text style={{ color: theme.accent2, textAlign: 'center', fontSize: 13.5, fontWeight: '700', marginTop: 4, paddingHorizontal: 20 }}>
-          {notice}
+        <Text
+          style={{
+            position: 'absolute', left: 20, right: 20, textAlign: 'center',
+            color: theme.accent2, fontSize: 13.5, fontWeight: '700', lineHeight: 19,
+            opacity: notice ? 1 : 0,
+          }}
+        >
+          {notice ?? ''}
         </Text>
-      )}
+      </View>
 
       {/* Plateau centré */}
       <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -308,7 +321,7 @@ export default function GameScreen({
       </View>
 
       {/* Barre du bas : 16 px de marge de chaque côté, boutons de largeur égale */}
-      <View style={styles.bottomBar}>
+      <View style={styles.bottomBar} testID="bottom-bar">
         <Pill icon={<IconUndo size={19} color={theme.text} />} label={t.undo} theme={theme} style={{ flex: 1 }} onPress={undo} disabled={!canUndo || !!sinking} />
         <Pill icon={<IconBulb size={19} color="#FFF" />} label={t.hint} theme={theme} accent style={{ flex: 1 }} onPress={() => { sound.play('click'); setAdOpen(true); }} disabled={!!sinking || !!victory} />
         <Pill icon={<IconRestart size={19} color={theme.text} />} label={t.restart} theme={theme} style={{ flex: 1 }} onPress={restart} disabled={!!sinking} />
@@ -353,18 +366,42 @@ export default function GameScreen({
               disabled={adCount > 0}
               style={[styles.modalBtn, { backgroundColor: adCount > 0 ? theme.panel : theme.accent, borderColor: theme.panelBorder, alignSelf: 'stretch', alignItems: 'center' }]}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {adCount === 0 && <IconBulb size={18} color="#FFF" />}
-                <Text style={{ color: adCount > 0 ? theme.subtext : '#FFF', fontWeight: '800', fontSize: 15 }}>
-                  {adCount > 0 ? `${t.adWait}… ${adCount}s` : t.adShowHint}
-                </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%', justifyContent: 'center' }}>
+                {/* Emplacement d'icône toujours présent (opacité seule) et
+                    texte à boîte fixe : la géométrie du bouton ne change
+                    jamais quand son libellé change (CLS = 0). */}
+                <View style={{ opacity: adCount === 0 ? 1 : 0 }}>
+                  <IconBulb size={18} color="#FFF" />
+                </View>
+                {/* Libellés superposés (opacité seule) : aucun changement
+                    de contenu donc aucun micro-décalage du texte. */}
+                <View style={{ flex: 1, height: 20, position: 'relative' }}>
+                  <Text style={{
+                    position: 'absolute', left: 0, right: 0, top: 0, textAlign: 'center',
+                    color: theme.subtext, fontWeight: '800', fontSize: 15,
+                    opacity: adCount > 0 ? 1 : 0,
+                  }}>
+                    {`${t.adWait}… ${adCount}s`}
+                  </Text>
+                  <Text style={{
+                    position: 'absolute', left: 0, right: 0, top: 0, textAlign: 'center',
+                    color: '#FFF', fontWeight: '800', fontSize: 15,
+                    opacity: adCount === 0 ? 1 : 0,
+                  }}>
+                    {t.adShowHint}
+                  </Text>
+                </View>
+                <View style={{ width: 18 }} />
               </View>
             </Pressable>
-            {adCount === 0 && (
-              <Pressable onPress={() => setAdOpen(false)} style={{ marginTop: 10 }}>
-                <Text style={{ color: theme.subtext, fontWeight: '600' }}>{t.close}</Text>
-              </Pressable>
-            )}
+            {/* Zone « Fermer » toujours présente (opacité seule) : la
+                carte ne change jamais de taille → aucun layout shift. */}
+            <Pressable
+              onPress={() => { if (adCount === 0) setAdOpen(false); }}
+              style={{ marginTop: 10, height: 24, justifyContent: 'center', opacity: adCount === 0 ? 1 : 0 }}
+            >
+              <Text style={{ color: theme.subtext, fontWeight: '600' }}>{t.close}</Text>
+            </Pressable>
           </View>
         </View>
       </Modal>
@@ -403,6 +440,7 @@ export default function GameScreen({
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 },
+  fixedTextZone: { height: 38, marginTop: 2, justifyContent: 'center', position: 'relative' },
   iconBtn: {
     width: 44, height: 44, borderRadius: 14, borderWidth: 1,
     alignItems: 'center', justifyContent: 'center',
