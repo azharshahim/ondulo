@@ -13,12 +13,17 @@ import HomeScreen from './src/screens/HomeScreen';
 import LevelMapScreen from './src/screens/LevelMapScreen';
 import GameScreen from './src/screens/GameScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import ParentalDashboardScreen from './src/screens/ParentalDashboardScreen';
+import SleepScreen from './src/screens/SleepScreen';
+import PrivacyScreen from './src/screens/PrivacyScreen';
 import {
   loadLang, loadDict, isRTL, type Lang, type Dict,
 } from './src/i18n';
 import {
   loadProgress, loadSettings, saveProgress, saveSettings, totalStars,
-  type Progress, type Settings,
+  loadProfiles, saveProfiles, loadParental, saveParental,
+  type Progress, type Settings, type ProfilesData, type ParentalSettings,
 } from './src/state/storage';
 import { todayKey, TOTAL_LEVELS } from './src/levels/levels';
 import { sound } from './src/audio/sound';
@@ -33,6 +38,10 @@ type Route =
   | { name: 'home' }
   | { name: 'levels' }
   | { name: 'settings' }
+  | { name: 'profiles' }
+  | { name: 'parental' }
+  | { name: 'privacy' }
+  | { name: 'sleep' }
   | { name: 'game'; levelNumber: number | null }; // null = défi quotidien
 
 /**
@@ -79,6 +88,8 @@ export default function App() {
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const [settings, setSettings] = useState<Settings | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
+  const [profiles, setProfiles] = useState<ProfilesData | null>(null);
+  const [parental, setParental] = useState<ParentalSettings | null>(null);
   const [lang, setLang] = useState<Lang>('en');
   const [dict, setDict] = useState<Dict>({});
 
@@ -86,15 +97,22 @@ export default function App() {
   useEffect(() => { installWebFixes(); }, []);
 
   // Chargement initial : langue (détection automatique, repli anglais),
-  // dictionnaire de traduction (JSON) et sauvegarde.
+  // dictionnaire de traduction (JSON), sauvegarde, profils, parental.
   useEffect(() => {
     (async () => {
-      const [lang, s, p] = await Promise.all([loadLang(), loadSettings(), loadProgress()]);
+      const [lang, s, p, prof, par] = await Promise.all([
+        loadLang(),
+        loadSettings(),
+        loadProgress(),
+        loadProfiles(),
+        loadParental(),
+      ]);
       setLang(lang);
-      const dict = await loadDict(lang);
-      setDict(dict);
+      setDict(loadDict(lang));
       setSettings(s);
       setProgress(p);
+      setProfiles(prof);
+      setParental(par);
     })();
   }, []);
 
@@ -203,6 +221,8 @@ export default function App() {
               onLevels={() => setRoute({ name: 'levels' })}
               onDaily={() => setRoute({ name: 'game', levelNumber: null })}
               onSettings={() => setRoute({ name: 'settings' })}
+              onProfiles={() => setRoute({ name: 'profiles' })}
+              onParental={() => setRoute({ name: 'parental' })}
             />
           ) : route.name === 'levels' ? (
             <LevelMapScreen
@@ -222,6 +242,57 @@ export default function App() {
               totalStars={stars}
               onChange={patchSettings}
               onBack={() => setRoute({ name: 'home' })}
+            />
+          ) : route.name === 'profiles' ? (
+            <ProfileScreen
+              theme={theme}
+              t={t}
+              data={profiles ?? { profiles: [], activeId: null }}
+              onPick={(id) => {
+                setProfiles((prev) => {
+                  if (!prev) return prev;
+                  const next = { ...prev, activeId: id };
+                  void saveProfiles(next);
+                  return next;
+                });
+                setRoute({ name: 'home' });
+              }}
+              onCreate={(p) => {
+                setProfiles((prev) => {
+                  if (!prev) return prev;
+                  const next = { ...prev, profiles: [...prev.profiles, p], activeId: p.id };
+                  void saveProfiles(next);
+                  return next;
+                });
+                setRoute({ name: 'home' });
+              }}
+              onBack={() => setRoute({ name: 'home' })}
+            />
+          ) : route.name === 'parental' ? (
+            <ParentalDashboardScreen
+              theme={theme}
+              t={t}
+              data={profiles ?? { profiles: [], activeId: null }}
+              settings={parental ?? ({ pinHash: null } as ParentalSettings)}
+              onChange={(patch) => {
+                setParental((prev) => {
+                  if (!prev) return prev;
+                  const next = { ...prev, ...patch };
+                  void saveParental(next);
+                  return next;
+                });
+              }}
+              onSetPin={() => setRoute({ name: 'sleep' })}
+              onPrivacy={() => setRoute({ name: 'privacy' })}
+              onBack={() => setRoute({ name: 'home' })}
+            />
+          ) : route.name === 'privacy' ? (
+            <PrivacyScreen theme={theme} t={t} onBack={() => setRoute({ name: 'parental' })} />
+          ) : route.name === 'sleep' ? (
+            <SleepScreen
+              theme={theme}
+              t={t}
+              onExtend={() => setRoute({ name: 'parental' })}
             />
           ) : (
             <GameScreen
