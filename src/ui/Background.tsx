@@ -122,7 +122,9 @@ function SkiaParticles({ theme }: { theme: Theme }) {
   );
 }
 
-export default function Background({ theme, children }: { theme: Theme; children: React.ReactNode }) {
+export default function Background({ theme, children, dyslexic }: {
+  theme: Theme; children: React.ReactNode; dyslexic?: boolean;
+}) {
   return (
     <LinearGradient colors={theme.bgGradient} style={styles.root}>
       {/* Particules discrètes, derrière tout le reste (zIndex 0). */}
@@ -132,7 +134,7 @@ export default function Background({ theme, children }: { theme: Theme; children
           <SkiaParticles theme={theme} />
         </SkiaGuard>
       )}
-      <View style={styles.content}>{children}</View>
+      <View style={[styles.content, dyslexic ? { fontFamily: 'Arial' } as never : null]}>{children}</View>
     </LinearGradient>
   );
 }

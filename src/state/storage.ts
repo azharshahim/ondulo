@@ -40,6 +40,8 @@ export interface Settings {
   nightEnd?: number;
   colorblind: boolean;
   skin: SkinId;
+  /** Police lisible pour la dyslexie. */
+  dyslexicFont: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -54,6 +56,7 @@ export const DEFAULT_SETTINGS: Settings = {
   nightEnd: 7 * 60,     // 7h
   colorblind: false,
   skin: 'classique',
+  dyslexicFont: false,
 };
 
 export interface Progress {

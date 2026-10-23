@@ -109,6 +109,11 @@ export const IconAuto = (p: IconProps) => (
 export const IconSkip = (p: IconProps) => (
   <Base {...p}><Path d="M7 5h6v14H7V5ZM16 5l4 7-4 7" strokeWidth={1.8} /></Base>
 );
+export const IconText = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M5 5h14M12 5v14M9 19h6" strokeWidth={2} />
+  </Base>
+);
 export const IconSound = (p: IconProps) => (
   <Base {...p}>
     <Path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4Z" />

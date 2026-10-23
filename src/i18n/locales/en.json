@@ -124,5 +124,6 @@
   "tutorialTail": "Or by the tail",
   "tutorialTailText": "You can also grab the tail and slide the snake backward.",
   "tutorialHole": "Match the colors!",
-  "tutorialHoleText": "Each snake must enter the hole of its own color."
+  "tutorialHoleText": "Each snake must enter the hole of its own color.",
+  "dyslexicFont": "Readable font (dyslexia)"
 }

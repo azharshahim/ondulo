@@ -124,5 +124,6 @@
   "tutorialTail": "Ou par la queue",
   "tutorialTailText": "Saisis la queue pour glisser le serpent à reculons.",
   "tutorialHole": "Mets les couleurs ensemble !",
-  "tutorialHoleText": "Chaque serpent doit entrer dans le trou de sa couleur."
+  "tutorialHoleText": "Chaque serpent doit entrer dans le trou de sa couleur.",
+  "dyslexicFont": "가독성 좋은 글씨 (ディスレクシア)"
 }

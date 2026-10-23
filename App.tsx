@@ -66,13 +66,17 @@ function installWebFixes() {
     'body { position: fixed; inset: 0; width: 100%; }',
     '#root { height: 100dvh; }',
     '* { -webkit-tap-highlight-color: transparent; }',
+    // Zoom autorisé sur le reste de la page, interdit sur le plateau.
+    '[data-testid="game-board"] { touch-action: none; user-scalable: none; }',
+    'html, body { touch-action: pan-x pan-y; }',
+    'input, button, [role="button"] { font-size: 16px; }',
   ].join('\n');
   doc.head.appendChild(style);
   const meta = doc.querySelector('meta[name="viewport"]');
   if (meta) {
     meta.setAttribute(
       'content',
-      'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
+      'width=device-width, initial-scale=1, viewport-fit=cover',
     );
   }
   // Détection du mode clair/sombre du système (web) : expose __onduloNight.
@@ -82,6 +86,15 @@ function installWebFixes() {
       const update = () => { (globalThis as { __onduloNight?: boolean }).__onduloNight = mq.matches; };
       update();
       mq.addEventListener?.('change', update);
+    }
+  } catch { /* ignore */ }
+  // Police lisible (dyslexie) : appliquée via un style global.
+  try {
+    if ((globalThis as { __onduloDyslexic?: boolean }).__onduloDyslexic) {
+      const d = doc.createElement('style');
+      d.id = 'ondulo-dyslexic';
+      d.textContent = "body, #root * { font-family: 'Arial', 'Segoe UI', sans-serif !important; letter-spacing: 0.4px !important; }";
+      doc.head.appendChild(d);
     }
   } catch { /* ignore */ }
 }
@@ -207,7 +220,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StatusBar style={theme.isDark ? 'light' : 'dark'} />
-        <Background theme={theme}>
+        <Background theme={theme} dyslexic={settings?.dyslexicFont ?? false}>
           {!settings || !progress ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
               <ActivityIndicator size="large" color={theme.accent2} />

@@ -9,7 +9,7 @@ import { LANG_LIST, type Lang } from '../i18n';
 import type { Theme } from '../ui/theme';
 import {
   IconChevronLeft, IconEye, IconLock, IconMoon, IconMusic, IconSnake, IconSound,
-  IconAuto, IconCalendar, IconSparkle, IconStar, IconSun, IconVibrate,
+  IconAuto, IconCalendar, IconSparkle, IconStar, IconSun, IconText, IconVibrate,
 } from '../ui/icons';
 import { sound } from '../audio/sound';
 
@@ -98,6 +98,7 @@ export default function SettingsScreen({
           <Row icon={<IconMusic size={21} color={theme.text} />} label={t.music} value={settings.music} onToggle={(v) => onChange({ music: v })} />
           <Row icon={<IconVibrate size={21} color={theme.text} />} label={t.haptics} value={settings.haptics} onToggle={(v) => onChange({ haptics: v })} />
           <Row icon={<IconEye size={21} color={theme.text} />} label={t.colorblind} value={settings.colorblind} onToggle={(v) => onChange({ colorblind: v })} />
+          <Row icon={<IconText size={21} color={theme.text} />} label={t.dyslexicFont} value={settings.dyslexicFont} onToggle={(v) => onChange({ dyslexicFont: v })} />
         </Section>
 
         <Section title={t.language}>
