@@ -36,7 +36,7 @@ export default function PrivacyScreen({ theme, t, onBack }: {
               t.privacyNoAccount,
             ].map((item, i) => (
               <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={{ color: theme.accent2, fontWeight: '900' }}>✓</Text>
+                <Text style={{ color: theme.accentText, fontWeight: '900' }}>✓</Text>
                 <Text style={{ color: theme.text, fontSize: 14 }}>{item}</Text>
               </View>
             ))}

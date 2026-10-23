@@ -15,6 +15,10 @@ export interface Theme {
   holeInner: string;
   accent: string;
   accent2: string;
+  /** Variante d'accent lisible en TEXTE sur le fond (≥ 4,5:1). */
+  accentText: string;
+  /** Couleur de texte d'erreur, adaptée au fond (≥ 4,5:1). */
+  error: string;
   buttonText: string;
   isDark: boolean;
   /** Couleur douce du filtre chaud (rgba) en mode Nuit. */
@@ -31,12 +35,18 @@ export const THEMES: Record<ThemeId, Theme> = {
     panel: 'rgba(255,255,255,0.80)',
     panelBorder: 'rgba(38,49,78,0.10)',
     text: '#26314E',
-    subtext: 'rgba(38,49,78,0.62)',
+    // 0,78 au lieu de 0,62 : le texte secondaire passait de 3,73:1 à ≥ 4,5:1
+    // sur tous les arrêts du dégradé (identité conservée : même encre).
+    subtext: 'rgba(38,49,78,0.78)',
     cell: 'rgba(255,255,255,0.70)',
     cellBorder: 'rgba(38,49,78,0.10)',
     holeInner: '#26314E',
-    accent: '#EF6B73',
-    accent2: '#0A9BEF',
+    // Corail et azur d'origine (#EF6B73 / #0A9BEF) ne donnaient que 2,99:1 et
+    // 3,02:1 avec un libellé blanc : même teinte, un cran plus profonde.
+    accent: '#C52028',
+    accent2: '#1576BC',
+    accentText: '#AD1F26',
+    error: '#B23A16',
     buttonText: '#FFFFFF',
     isDark: false,
     warmOverlay: 'rgba(255, 220, 150, 0)',
@@ -53,8 +63,12 @@ export const THEMES: Record<ThemeId, Theme> = {
     cell: 'rgba(255,255,255,0.06)',
     cellBorder: 'rgba(255,255,255,0.12)',
     holeInner: '#0A0F24',
-    accent: '#EF6B73',
-    accent2: '#3FA7FF',
+    accent: '#C52028',
+    accent2: '#1576BC',
+    // Sur fond nuit, l'accent utilisé en TEXTE doit être clair : #7CC4FF
+    // donne 7,84:1 sur l'arrêt le plus clair du dégradé.
+    accentText: '#7CC4FF',
+    error: '#FF8A65',
     buttonText: '#FFFFFF',
     isDark: true,
     warmOverlay: 'rgba(255, 180, 100, 0.07)',
@@ -71,8 +85,10 @@ export const THEMES: Record<ThemeId, Theme> = {
     cell: 'rgba(0,255,255,0.07)',
     cellBorder: 'rgba(0,255,255,0.30)',
     holeInner: '#020208',
-    accent: '#FF2E88',
-    accent2: '#00E5FF',
+    accent: '#C1135F',
+    accent2: '#00707D',
+    accentText: '#8BF3FF',
+    error: '#FF8A65',
     buttonText: '#FFFFFF',
     isDark: true,
     warmOverlay: 'rgba(255, 180, 100, 0.05)',
@@ -85,12 +101,16 @@ export const THEMES: Record<ThemeId, Theme> = {
     panel: 'rgba(255,255,255,0.78)',
     panelBorder: 'rgba(38,49,78,0.10)',
     text: '#26314E',
-    subtext: 'rgba(38,49,78,0.62)',
+    // 0,78 au lieu de 0,62 : le texte secondaire passait de 3,73:1 à ≥ 4,5:1
+    // sur tous les arrêts du dégradé (identité conservée : même encre).
+    subtext: 'rgba(38,49,78,0.78)',
     cell: 'rgba(255,255,255,0.66)',
     cellBorder: 'rgba(38,49,78,0.10)',
     holeInner: '#26314E',
-    accent: '#FF5964',
-    accent2: '#2478CC',
+    accent: '#C52028',
+    accent2: '#1576BC',
+    accentText: '#AD1F26',
+    error: '#B23A16',
     buttonText: '#FFFFFF',
     isDark: false,
     warmOverlay: 'rgba(255, 220, 150, 0)',
@@ -106,8 +126,10 @@ export const THEMES: Record<ThemeId, Theme> = {
     cell: 'rgba(255,255,255,0.10)',
     cellBorder: 'rgba(255,255,255,0.18)',
     holeInner: '#101024',
-    accent: '#FF5964',
-    accent2: '#3FA7FF',
+    accent: '#C52028',
+    accent2: '#1576BC',
+    accentText: '#7CC4FF',
+    error: '#FF8A65',
     buttonText: '#FFFFFF',
     isDark: true,
     warmOverlay: 'rgba(255, 180, 100, 0.06)',

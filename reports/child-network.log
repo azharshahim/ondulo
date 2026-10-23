@@ -1,0 +1,22 @@
+# Journal des requêtes réseau — profil enfant (Ondulo)
+# généré : 2026-10-23T15:15:12.511Z
+# URL : http://localhost:4174/ondulo/
+# origine de référence : localhost:4174
+# niveau joué : 1 (4 coups, terminé = true)
+# requêtes totales : 12 — domaines tiers : 0
+
+MÉTHODE  HÔTE                    TYPE      PHASE
+GET      localhost:4174          document  B (partie enfant)
+GET      localhost:4174          script    B (partie enfant)
+GET      localhost:4174          media     B (partie enfant)
+GET      localhost:4174          media     B (partie enfant)
+GET      localhost:4174          media     B (partie enfant)
+GET      localhost:4174          media     B (partie enfant)
+GET      localhost:4174          media     B (partie enfant)
+GET      localhost:4174          document  C (porte parentale)
+GET      localhost:4174          script    C (porte parentale)
+GET      localhost:4174          media     C (porte parentale)
+GET      localhost:4174          media     C (porte parentale)
+GET      localhost:4174          media     C (porte parentale)
+
+RÉSULTAT : AUCUNE requête vers un domaine tiers

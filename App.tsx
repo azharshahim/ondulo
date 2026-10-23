@@ -18,6 +18,9 @@ import ParentalDashboardScreen from './src/screens/ParentalDashboardScreen';
 import SleepScreen from './src/screens/SleepScreen';
 import PrivacyScreen from './src/screens/PrivacyScreen';
 import TutorialScreen from './src/screens/TutorialScreen';
+import ParentalGate from './src/screens/ParentalGate';
+import PinScreen from './src/screens/PinScreen';
+import PauseReminder from './src/ui/PauseReminder';
 import {
   loadLang, loadDict, isRTL, type Lang, type Dict,
 } from './src/i18n';
@@ -27,6 +30,7 @@ import {
   type Progress, type Settings, type ProfilesData, type ParentalSettings,
 } from './src/state/storage';
 import { todayKey, TOTAL_LEVELS } from './src/levels/levels';
+import { createPlayClock, EXTENSION_MIN, type PlayClock, type PlayStatus } from './src/state/timeRules';
 import { sound } from './src/audio/sound';
 
 /** Variable de module pour la langue activée (chargement asynchrone). */
@@ -42,6 +46,7 @@ type Route =
   | { name: 'profiles' }
   | { name: 'parental' }
   | { name: 'privacy' }
+  | { name: 'pin' }
   | { name: 'sleep' }
   | { name: 'tutorial' }
   | { name: 'game'; levelNumber: number | null }; // null = défi quotidien
@@ -114,6 +119,19 @@ export default function App() {
   const [profiles, setProfiles] = useState<ProfilesData | null>(null);
   const [parental, setParental] = useState<ParentalSettings | null>(null);
   const [lang, setLang] = useState<Lang>('en');
+  // ── Porte parentale : aucun écran réservé aux adultes n'est atteignable
+  // sans PIN ou barrière de calcul. Le déverrouillage ne vaut que pour la
+  // session en cours (il est oublié au rechargement).
+  const [parentalUnlocked, setParentalUnlocked] = useState(false);
+  const [gate, setGate] = useState<null | 'parental' | 'privacy' | 'extend'>(null);
+  // ── Règles de temps (limite, coucher, pause) : horloge de jeu unique ──
+  const clockRef = React.useRef<PlayClock | null>(null);
+  if (!clockRef.current) {
+    clockRef.current = createPlayClock({
+      config: { dailyLimitMin: 0, bedtimeStartMin: 20 * 60, bedtimeEndMin: 7 * 60, pauseReminderMin: 0 },
+    });
+  }
+  const [playStatus, setPlayStatus] = useState<PlayStatus | null>(null);
   const [dict, setDict] = useState<Dict>({});
 
   // Verrouillage de la page web (défilement, zoom, hauteur dynamique).
@@ -220,6 +238,59 @@ export default function App() {
     if (palette === 'neon') return THEMES.neon;
     return THEMES.jour;
   }, [settings, appearanceEff]);
+  // ── Règles de temps ────────────────────────────────────────────────────
+  // La configuration suit les réglages parentaux.
+  useEffect(() => {
+    if (!parental || !clockRef.current) return;
+    clockRef.current.configure({
+      dailyLimitMin: parental.dailyLimitMin,
+      bedtimeStartMin: parental.bedtimeStartMin,
+      bedtimeEndMin: parental.bedtimeEndMin,
+      pauseReminderMin: parental.pauseReminderMin,
+    });
+    setPlayStatus(clockRef.current.status());
+  }, [parental]);
+
+  // L'horloge ne tourne que pendant une partie ; remise à zéro chaque jour.
+  useEffect(() => {
+    const clock = clockRef.current;
+    if (!clock) return;
+    clock.resetIfNewDay(todayKey());
+    if (route.name === 'game' && !gate) clock.start();
+    else clock.stop();
+    setPlayStatus(clock.status());
+    const iv = setInterval(() => {
+      clock.resetIfNewDay(todayKey());
+      setPlayStatus(clock.status());
+    }, 5000);
+    return () => clearInterval(iv);
+  }, [route, gate]);
+
+  // Le code parental prolonge la session de EXTENSION_MIN minutes.
+  const extendSession = useCallback(() => {
+    clockRef.current?.extend(EXTENSION_MIN);
+    setPlayStatus(clockRef.current?.status() ?? null);
+    setRoute((r) => (r.name === 'game' ? r : { name: 'home' }));
+  }, []);
+
+  // Toute entrée vers un écran « adulte » passe par la porte parentale.
+  const requireParental = useCallback((intent: 'parental' | 'privacy', then: () => void) => {
+    if (parentalUnlocked) { then(); return; }
+    setGate(intent);
+  }, [parentalUnlocked]);
+
+  const onGateSuccess = useCallback(() => {
+    const intent = gate;
+    setParentalUnlocked(true);
+    setGate(null);
+    if (intent === 'privacy') setRoute({ name: 'privacy' });
+    else if (intent === 'parental') setRoute({ name: 'parental' });
+    else if (intent === 'extend') {
+      clockRef.current?.extend(EXTENSION_MIN);
+      setPlayStatus(clockRef.current?.status() ?? null);
+    }
+  }, [gate]);
+
   const t = dict;
   const stars = progress ? totalStars(progress) : 0;
   const dailyDone = !!progress?.daily[todayKey()];
@@ -229,7 +300,20 @@ export default function App() {
       <SafeAreaProvider>
         <StatusBar style={theme.isDark ? 'light' : 'dark'} />
         <Background theme={theme} dyslexic={settings?.dyslexicFont ?? false}>
-          {!settings || !progress ? (
+          {gate ? (
+            <ParentalGate
+              theme={theme}
+              t={t}
+              onSuccess={onGateSuccess}
+              onCancel={() => setGate(null)}
+            />
+          ) : playStatus && (playStatus.kind === 'bedtime' || playStatus.kind === 'limit') ? (
+            <SleepScreen
+              theme={theme}
+              t={t}
+              onExtend={() => setGate('extend')}
+            />
+          ) : !settings || !progress ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
               <ActivityIndicator size="large" color={theme.accent2} />
             </View>
@@ -259,7 +343,7 @@ export default function App() {
               onDaily={() => setRoute({ name: 'game', levelNumber: null })}
               onSettings={() => setRoute({ name: 'settings' })}
               onProfiles={() => setRoute({ name: 'profiles' })}
-              onParental={() => setRoute({ name: 'parental' })}
+              onParental={() => requireParental('parental', () => setRoute({ name: 'parental' }))}
             />
           ) : route.name === 'levels' ? (
             <LevelMapScreen
@@ -319,17 +403,19 @@ export default function App() {
                   return next;
                 });
               }}
-              onSetPin={() => setRoute({ name: 'sleep' })}
-              onPrivacy={() => setRoute({ name: 'privacy' })}
+              onSetPin={() => setRoute({ name: 'pin' })}
+              onPrivacy={() => requireParental('privacy', () => setRoute({ name: 'privacy' }))}
               onBack={() => setRoute({ name: 'home' })}
             />
+          ) : route.name === 'pin' ? (
+            <PinScreen theme={theme} t={t} onBack={() => setRoute({ name: 'parental' })} />
           ) : route.name === 'privacy' ? (
             <PrivacyScreen theme={theme} t={t} onBack={() => setRoute({ name: 'parental' })} />
           ) : route.name === 'sleep' ? (
             <SleepScreen
               theme={theme}
               t={t}
-              onExtend={() => setRoute({ name: 'parental' })}
+              onExtend={() => setGate('extend')}
             />
           ) : (
             <GameScreen
@@ -349,6 +435,18 @@ export default function App() {
               }
             />
           )}
+          {playStatus?.kind === 'pause' && route.name === 'game' && !gate ? (
+            <PauseReminder
+              theme={theme}
+              t={t}
+              minutes={parental?.pauseReminderMin ?? 0}
+              onPause={() => { clockRef.current?.acknowledgePause(); setRoute({ name: 'home' }); }}
+              onContinue={() => {
+                clockRef.current?.acknowledgePause();
+                setPlayStatus(clockRef.current?.status() ?? null);
+              }}
+            />
+          ) : null}
         </Background>
       </SafeAreaProvider>
     </GestureHandlerRootView>

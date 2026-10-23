@@ -294,7 +294,7 @@ export default function GameScreen({
         <Text
           style={{
             position: 'absolute', left: 20, right: 20, textAlign: 'center',
-            color: theme.accent2, fontSize: 13.5, fontWeight: '700', lineHeight: 19,
+            color: theme.accentText, fontSize: 13.5, fontWeight: '700', lineHeight: 19,
             opacity: notice ? 1 : 0,
           }}
         >

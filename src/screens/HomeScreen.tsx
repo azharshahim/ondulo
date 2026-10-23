@@ -86,7 +86,7 @@ function MenuButton({ icon, label, sub, onPress, theme, primary }: {
       <View style={{ flex: 1 }}>
         <Text style={{ color: primary ? '#FFF' : theme.text, fontWeight: '900', fontSize: 17.5 }}>{label}</Text>
         {!!sub && (
-          <Text style={{ color: primary ? 'rgba(255,255,255,0.85)' : theme.subtext, fontSize: 12.5, fontWeight: '600' }}>{sub}</Text>
+          <Text style={{ color: primary ? '#FFFFFF' : theme.subtext, fontSize: 12.5, fontWeight: '600' }}>{sub}</Text>
         )}
       </View>
       <IconChevronRight size={20} color={primary ? '#FFF' : theme.subtext} />

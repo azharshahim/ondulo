@@ -50,20 +50,22 @@ export default function TutorialScreen({ theme, t, onDone, onSkip }: {
 
   return (
     <LinearGradient colors={theme.bgGradient} style={styles.root}>
-      {/* Plateau fictif */}
+      {/* Plateau fictif : 2 rangées de 5 cases, serpent et trou posés DESSUS
+          (positions calculées à partir des mêmes constantes que les cases,
+          donc parfaitement alignés sur la grille). */}
       <View style={[styles.board, { width: width - 70 }]}>
-        {[0, 1, 2, 3, 4].map((c) => (
-          <View key={c} style={[styles.cell, { backgroundColor: theme.cell }]} />
+        {Array.from({ length: 10 }, (_, i) => (
+          <View key={i} style={[styles.cell, { backgroundColor: theme.cell }]} />
         ))}
-        {/* Serpent fictif */}
+        {/* Serpent fictif : tête, corps et queue sur la première rangée */}
         <View style={styles.snakeBody}>
-          <View style={[styles.head, { backgroundColor: '#EF6B73' }]} />
-          <View style={[styles.body, { backgroundColor: '#9BDD4A' }]} />
-          <View style={[styles.tail, { backgroundColor: '#C9A0F5' }]} />
+          <View style={[styles.seg, { backgroundColor: '#EF6B73' }]} />
+          <View style={[styles.seg, { backgroundColor: '#9BDD4A' }]} />
+          <View style={[styles.seg, { backgroundColor: '#C9A0F5' }]} />
         </View>
-        {/* Trou fictif */}
+        {/* Trou fictif : dernière case de la seconde rangée */}
         <View style={[styles.hole, { borderColor: '#EF6B73' }]}>
-          <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#0A0F24' }} />
+          <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#0A0F24' }} />
         </View>
       </View>
 
@@ -114,22 +116,49 @@ export default function TutorialScreen({ theme, t, onDone, onSkip }: {
   );
 }
 
+// Géométrie de l'illustration : mêmes valeurs pour les cases et les éléments
+// posés dessus (aucun décalage possible).
+const CELL = 52;   // côté d'une case
+const GAP = 8;     // espace entre deux cases
+const PAD = 16;    // marge interne du plateau
+const SEG = 26;    // diamètre d'un segment de serpent
+const HOLE = 40;   // diamètre extérieur du trou
+const STEP = CELL + GAP;
+
 const styles = StyleSheet.create({
   root: { flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 40 },
-  board: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(0,0,0,0.25)', padding: 16, borderRadius: 20, overflow: 'hidden' },
-  cell: { width: 52, height: 52, borderRadius: 12 },
-  snakeBody: { flexDirection: 'row', alignItems: 'center', marginTop: 70, gap: 4 },
-  head: { width: 26, height: 26, borderRadius: 13 },
-  body: { width: 26, height: 26, borderRadius: 13 },
-  tail: { width: 26, height: 26, borderRadius: 13 },
-  hole: { marginTop: 10, marginLeft: 40, padding: 6, borderRadius: 16, borderWidth: 3, backgroundColor: 'rgba(239,107,115,0.2)' },
+  board: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: GAP,
+    backgroundColor: 'rgba(0,0,0,0.25)', padding: PAD, borderRadius: 20, overflow: 'hidden',
+  },
+  cell: { width: CELL, height: CELL, borderRadius: 12 },
+  // Serpent fictif : posé sur la 2e case de la 1re rangée.
+  snakeBody: {
+    position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 6,
+    left: PAD + STEP + (CELL - SEG) / 2 + SEG / 2, top: PAD + (CELL - SEG) / 2,
+  },
+  seg: { width: SEG, height: SEG, borderRadius: SEG / 2 },
+  // Trou fictif : posé sur la dernière case de la 2e rangée.
+  hole: {
+    position: 'absolute', padding: 5, borderRadius: 16, borderWidth: 3,
+    backgroundColor: 'rgba(239,107,115,0.2)',
+    left: PAD + 4 * STEP + (CELL - HOLE) / 2, top: PAD + STEP + (CELL - HOLE) / 2,
+  },
   hand: { position: 'absolute', transform: [{ translateX: -18 }, { translateY: -18 }], zIndex: 10 },
   legend: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', gap: 6 },
   title: { fontSize: 20, fontWeight: '900' },
   text: { fontSize: 13.5, textAlign: 'center', lineHeight: 20 },
   dots: { flexDirection: 'row', gap: 6 },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  actions: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  skip: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  btn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 12, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1 },
+  // Trois éléments sur 414 px : sans flexShrink/gap, « Retour » chevauchait
+  // « Passer le tutoriel ». Le libellé de saut peut se réduire, pas les boutons.
+  actions: {
+    width: '100%', flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 20, gap: 8,
+  },
+  skip: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
+  btn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 12,
+    paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, flexShrink: 0,
+  },
 });
