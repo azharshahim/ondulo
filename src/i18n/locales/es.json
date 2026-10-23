@@ -67,5 +67,15 @@
   "onboardingTapTail": "…y luego en la cueva de su color!",
   "onboardingEnterHole": "Cada serpiente debe entrar en la cueva de su color.",
   "onboardingTryAgain": "Intentar de nuevo",
-  "langsNote": "Las traducciones se generan automáticamente y serán revisadas por nativos antes de la publicación."
+  "langsNote": "Las traducciones se generan automáticamente y serán revisadas por nativos antes de la publicación.",
+  "appearanceAuto": "Automático",
+  "appearanceDay": "Día",
+  "appearanceNight": "Noche",
+  "appearanceScheduled": "Noche programada",
+  "palette": "Paleta",
+  "paletteDay": "Paleta de día",
+  "paletteNight": "Paleta de noche",
+  "paletteNeon": "Paleta neón",
+  "nightStart": "Desde",
+  "nightEnd": "Hasta"
 }

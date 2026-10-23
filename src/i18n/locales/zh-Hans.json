@@ -67,5 +67,15 @@
   "onboardingTapTail": "…然后进入它颜色的洞！",
   "onboardingEnterHole": "每条蛇必须进入自己颜色的洞。",
   "onboardingTryAgain": "再试一次",
-  "langsNote": "翻译为机器生成，发布前将由母语者校对。"
+  "langsNote": "翻译为机器生成，发布前将由母语者校对。",
+  "appearanceAuto": "自动",
+  "appearanceDay": "白天",
+  "appearanceNight": "夜间",
+  "appearanceScheduled": "定时夜间",
+  "palette": "调色板",
+  "paletteDay": "白天调色板",
+  "paletteNight": "夜间调色板",
+  "paletteNeon": "霓虹调色板",
+  "nightStart": "从",
+  "nightEnd": "到"
 }

@@ -67,5 +67,15 @@
   "onboardingTapTail": "…then into the hole of its color!",
   "onboardingEnterHole": "Each snake must enter a hole of its own color.",
   "onboardingTryAgain": "Try again",
-  "langsNote": "Translations are machine-generated and will be reviewed by native speakers before release."
+  "langsNote": "Translations are machine-generated and will be reviewed by native speakers before release.",
+  "appearanceAuto": "Automatic",
+  "appearanceDay": "Day",
+  "appearanceNight": "Night",
+  "appearanceScheduled": "Scheduled night",
+  "palette": "Palette",
+  "paletteDay": "Day palette",
+  "paletteNight": "Night palette",
+  "paletteNeon": "Neon palette",
+  "nightStart": "From",
+  "nightEnd": "To"
 }

@@ -67,5 +67,15 @@
   "onboardingTapTail": "…そして同じ色の穴へ！",
   "onboardingEnterHole": "各ヘビは自分の色の穴に入らなければなりません。",
   "onboardingTryAgain": "もう一度",
-  "langsNote": "翻訳は機械翻訳です。公開前に母語話者が確認します。"
+  "langsNote": "翻訳は機械翻訳です。公開前に母語話者が確認します。",
+  "appearanceAuto": "自動",
+  "appearanceDay": "昼",
+  "appearanceNight": "夜",
+  "appearanceScheduled": "スケジュール夜",
+  "palette": "パレット",
+  "paletteDay": "昼パレット",
+  "paletteNight": "夜パレット",
+  "paletteNeon": "ネオンパレット",
+  "nightStart": "から",
+  "nightEnd": "まで"
 }

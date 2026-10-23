@@ -67,5 +67,15 @@
   "onboardingTapTail": "…그리고 같은 색깔 구멍에!",
   "onboardingEnterHole": "각 뱀은 자기 색깔 구멍에 들어가야 합니다.",
   "onboardingTryAgain": "다시 시도",
-  "langsNote": "번역은 기계 번역입니다. 출고 전에 모국어 사용자들이 검토합니다."
+  "langsNote": "번역은 기계 번역입니다. 출고 전에 모국어 사용자들이 검토합니다.",
+  "appearanceAuto": "자동",
+  "appearanceDay": "낮",
+  "appearanceNight": "밤",
+  "appearanceScheduled": "예정夜间",
+  "palette": "팔레트",
+  "paletteDay": "낮 팔레트",
+  "paletteNight": "밤 팔레트",
+  "paletteNeon": "네온 팔레트",
+  "nightStart": "부터",
+  "nightEnd": "까지"
 }

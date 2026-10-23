@@ -67,5 +67,15 @@
   "onboardingTapTail": "…puis dans le trou de sa couleur !",
   "onboardingEnterHole": "Chaque serpent doit entrer dans un trou de sa couleur.",
   "onboardingTryAgain": "Essayer encore",
-  "langsNote": "Les traductions sont générées automatiquement et seront relues par des natifs avant la publication."
+  "langsNote": "Les traductions sont générées automatiquement et seront relues par des natifs avant la publication.",
+  "appearanceAuto": "Automatique",
+  "appearanceDay": "Jour",
+  "appearanceNight": "Nuit",
+  "appearanceScheduled": "Nuit programmée",
+  "palette": "Palette",
+  "paletteDay": "Palette jour",
+  "paletteNight": "Palette nuit",
+  "paletteNeon": "Palette néon",
+  "nightStart": "De",
+  "nightEnd": "À"
 }

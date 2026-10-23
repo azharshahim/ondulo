@@ -67,5 +67,15 @@
   "onboardingTapTail": "…poi nel buco del suo colore!",
   "onboardingEnterHole": "Ogni serpente deve entrare in un buco del suo colore.",
   "onboardingTryAgain": "Riprova",
-  "langsNote": "Le traduzioni sono generate automaticamente e saranno revisionate da madrelingua prima della pubblicazione."
+  "langsNote": "Le traduzioni sono generate automaticamente e saranno revisionate da madrelingua prima della pubblicazione.",
+  "appearanceAuto": "Automatico",
+  "appearanceDay": "Giorno",
+  "appearanceNight": "Notte",
+  "appearanceScheduled": "Notte programmata",
+  "palette": "Paletta",
+  "paletteDay": "Paletta giorno",
+  "paletteNight": "Paletta notte",
+  "paletteNeon": "Paletta neon",
+  "nightStart": "Da",
+  "nightEnd": "A"
 }

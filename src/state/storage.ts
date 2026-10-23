@@ -4,7 +4,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Lang } from '../i18n';
 
-export type ThemeId = 'sombre' | 'clair' | 'neon';
+export type ThemeId = 'jour' | 'nuit' | 'neon' | 'clair' | 'sombre';
+
+/** Mode d'apparence : Auto (suit le système), Jour, Nuit, Nuit programmée. */
+export type AppearanceMode = 'auto' | 'jour' | 'nuit' | 'scheduled';
+
+/** Palette indépendante (Nuit + néon). */
+export type PaletteId = 'jour' | 'nuit' | 'neon';
 export type SkinId = 'classique' | 'rayures' | 'pois' | 'degrade' | 'arcenciel';
 
 export interface SkinInfo {
@@ -27,6 +33,11 @@ export interface Settings {
   haptics: boolean;
   lang: Lang;
   theme: ThemeId;
+  appearance: AppearanceMode;
+  palette: PaletteId;
+  /** Heure de début / fin de la nuit programmée (minutes depuis minuit). */
+  nightStart?: number;
+  nightEnd?: number;
   colorblind: boolean;
   skin: SkinId;
 }
@@ -36,7 +47,11 @@ export const DEFAULT_SETTINGS: Settings = {
   music: true,
   haptics: true,
   lang: 'fr',
-  theme: 'sombre',
+  theme: 'nuit',
+  appearance: 'auto',
+  palette: 'nuit',
+  nightStart: 20 * 60, // 20h
+  nightEnd: 7 * 60,     // 7h
   colorblind: false,
   skin: 'classique',
 };

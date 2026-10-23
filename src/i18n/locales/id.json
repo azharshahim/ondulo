@@ -67,5 +67,15 @@
   "onboardingTapTail": "…lalu ke lekos warnanya!",
   "onboardingEnterHole": "Setiap serpente harus masuk lekos warnanya.",
   "onboardingTryAgain": "Coba lagi",
-  "langsNote": "Terjemahan dihasilkan otomatis dan akan diperiksa penutur asli sebelum rilis."
+  "langsNote": "Terjemahan dihasilkan otomatis dan akan diperiksa penutur asli sebelum rilis.",
+  "appearanceAuto": "Otomatis",
+  "appearanceDay": "Siang",
+  "appearanceNight": "Malam",
+  "appearanceScheduled": "Malam terjadwal",
+  "palette": "Palet",
+  "paletteDay": "Palet siang",
+  "paletteNight": "Palet malam",
+  "paletteNeon": "Palet neon",
+  "nightStart": "Dari",
+  "nightEnd": "Ke"
 }

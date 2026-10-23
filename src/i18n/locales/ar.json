@@ -67,5 +67,15 @@
   "onboardingTapTail": "…ثم إلى جحر لونه!",
   "onboardingEnterHole": "كل ثعبان يجب أن يدخل جحر لونه.",
   "onboardingTryAgain": "حاول مرة أخرى",
-  "langsNote": "الترجمات مُولَّدة آليّاً وسيراجعها متحدثون أصليون قبل النشر."
+  "langsNote": "الترجمات مُولَّدة آليّاً وسيراجعها متحدثون أصليون قبل النشر.",
+  "appearanceAuto": "تلقائي",
+  "appearanceDay": "نهار",
+  "appearanceNight": "ليل",
+  "appearanceScheduled": "ليل مبرمج",
+  "palette": "لوحة الألوان",
+  "paletteDay": "لوحة نهار",
+  "paletteNight": "لوحة ليل",
+  "paletteNeon": "لوحة نيون",
+  "nightStart": "من",
+  "nightEnd": "إلى"
 }

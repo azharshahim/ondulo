@@ -67,5 +67,15 @@
   "onboardingTapTail": "…e depois no buraco da cor dela!",
   "onboardingEnterHole": "Cada cobra deve entrar no buraco de sua cor.",
   "onboardingTryAgain": "Tentar novamente",
-  "langsNote": "As traduções são geradas automaticamente e serão revisadas por falantes nativos antes do lançamento."
+  "langsNote": "As traduções são geradas automaticamente e serão revisadas por falantes nativos antes do lançamento.",
+  "appearanceAuto": "Automático",
+  "appearanceDay": "Dia",
+  "appearanceNight": "Noite",
+  "appearanceScheduled": "Noite programada",
+  "palette": "Paleta",
+  "paletteDay": "Paleta de dia",
+  "paletteNight": "Paleta de noite",
+  "paletteNeon": "Paleta neon",
+  "nightStart": "Das",
+  "nightEnd": "Até"
 }

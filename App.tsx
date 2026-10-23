@@ -64,6 +64,15 @@ function installWebFixes() {
       'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
     );
   }
+  // Détection du mode clair/sombre du système (web) : expose __onduloNight.
+  try {
+    if (window.matchMedia) {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      const update = () => { (globalThis as { __onduloNight?: boolean }).__onduloNight = mq.matches; };
+      update();
+      mq.addEventListener?.('change', update);
+    }
+  } catch { /* ignore */ }
 }
 
 export default function App() {
@@ -137,10 +146,39 @@ export default function App() {
     });
   }, []);
 
-  const theme = useMemo(
-    () => THEMES[settings?.theme ?? 'sombre'],
-    [settings?.theme],
-  );
+  // Apparence effective :
+  //  • Auto : suit le système (dark/light) ou l'heure de nuit programmée ;
+  //  • Jour / Nuit : forcé ;
+  //  • Nuit programmée : hors de [nightStart, nightEnd] → Nuit.
+  // La palette (jour/nuit/néon) est indépendante : nuit + néon reste une
+  // option de couleurs fluorescentes.
+  const appearanceEff = useMemo(() => {
+    const s = settings;
+    if (!s) return 'auto';
+    if (s.appearance === 'auto') {
+      const g = globalThis as unknown as { __onduloNight?: boolean };
+      if (typeof g.__onduloNight === 'boolean') return g.__onduloNight ? 'nuit' : 'jour';
+      return 'nuit';
+    }
+    if (s.appearance === 'scheduled') {
+      const now = new Date();
+      const m = now.getHours() * 60 + now.getMinutes();
+      const start = s.nightStart ?? 20 * 60;
+      const end = s.nightEnd ?? 7 * 60;
+      const isNight = start > end ? m >= start || m < end : m >= start && m < end;
+      return isNight ? 'nuit' : 'jour';
+    }
+    return s.appearance;
+  }, [settings]);
+
+  const theme = useMemo(() => {
+    const s = settings;
+    if (!s) return THEMES.nuit;
+    const palette = s.palette ?? 'nuit';
+    if (appearanceEff === 'nuit') return THEMES[palette === 'jour' ? 'nuit' : palette];
+    if (palette === 'neon') return THEMES.neon;
+    return THEMES.jour;
+  }, [settings, appearanceEff]);
   const t = dict;
   const stars = progress ? totalStars(progress) : 0;
   const dailyDone = !!progress?.daily[todayKey()];

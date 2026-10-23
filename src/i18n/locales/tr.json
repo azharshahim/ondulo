@@ -67,5 +67,15 @@
   "onboardingTapTail": "…sonra kendi rengine ait kapına!",
   "onboardingEnterHole": "Her yılın kendi rengine ait kapına girmeli.",
   "onboardingTryAgain": "Tekrar dene",
-  "langsNote": "Çeviriler otomatik olarak oluşturulur ve yayın öncesinde yerel dil konuşanlar tarafından kontrol edilecektir."
+  "langsNote": "Çeviriler otomatik olarak oluşturulur ve yayın öncesinde yerel dil konuşanlar tarafından kontrol edilecektir.",
+  "appearanceAuto": "Otomatik",
+  "appearanceDay": "Gün",
+  "appearanceNight": "Gece",
+  "appearanceScheduled": "Planlı gece",
+  "palette": "Palet",
+  "paletteDay": "Gün palleti",
+  "paletteNight": "Gece palleti",
+  "paletteNeon": "Neon paleti",
+  "nightStart": "Başlangıç",
+  "nightEnd": "Bitiş"
 }

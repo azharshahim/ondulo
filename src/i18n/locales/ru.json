@@ -67,5 +67,15 @@
   "onboardingTapTail": "…а затем в нору её цвета!",
   "onboardingEnterHole": "Каждая змея должна войти в нору своего цвета.",
   "onboardingTryAgain": "Попробовать снова",
-  "langsNote": "Переводы генерируются автоматически и будут проверены носителем перед публикацией."
+  "langsNote": "Переводы генерируются автоматически и будут проверены носителем перед публикацией.",
+  "appearanceAuto": "Автоматически",
+  "appearanceDay": "День",
+  "appearanceNight": "Ночь",
+  "appearanceScheduled": "Ночь по расписанию",
+  "palette": "Палитра",
+  "paletteDay": "Дневная палитра",
+  "paletteNight": "Ночная палитра",
+  "paletteNeon": "Неоновая палитра",
+  "nightStart": "С",
+  "nightEnd": "До"
 }
