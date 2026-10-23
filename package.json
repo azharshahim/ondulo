@@ -50,6 +50,8 @@
     "test:web": "tsx tools/check-web-meta.ts",
     "test:secrets": "tsx tools/scan-secrets.ts",
     "test:stability": "tsx tools/test-stability.ts",
+    "capture": "tsx tools/capture-screens.ts",
+    "test:i18n": "tsx tools/check-i18n.ts",
     "serve:dist": "tsx tools/serve-dist.ts",
     "build:web": "expo export --platform web && tsx tools/postprocess-web.ts"
   },
