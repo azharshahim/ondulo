@@ -133,6 +133,18 @@ export default function App() {
   }
   const [playStatus, setPlayStatus] = useState<PlayStatus | null>(null);
   const [dict, setDict] = useState<Dict>({});
+  // Appui sur « Jouer » : choix du profil (créer ou continuer) avant la partie.
+  const [playAfterProfile, setPlayAfterProfile] = useState(false);
+  const goAfterTutorial = () => {
+    setPlayAfterProfile(false);
+    setRoute({ name: 'game', levelNumber: Math.min(progress?.unlocked ?? 1, TOTAL_LEVELS) });
+  };
+  const goAfterProfile = (isNew: boolean) => {
+    if (!playAfterProfile) { setRoute({ name: 'home' }); return; }
+    // nouveau profil : mini-tutoriel avant la première partie
+    if (isNew) { setRoute({ name: 'tutorial' }); return; }
+    goAfterTutorial();
+  };
 
   // Verrouillage de la page web (défilement, zoom, hauteur dynamique).
   useEffect(() => { installWebFixes(); }, []);
@@ -327,15 +339,8 @@ export default function App() {
             <TutorialScreen
               theme={theme}
               t={t}
-              onDone={() => setRoute({ name: 'profiles' })}
-              onSkip={() => setRoute({ name: 'profiles' })}
-            />
-          ) : (profiles === null || profiles.profiles.length === 0) && route.name === 'home' ? (
-            <TutorialScreen
-              theme={theme}
-              t={t}
-              onDone={() => setRoute({ name: 'profiles' })}
-              onSkip={() => setRoute({ name: 'profiles' })}
+              onDone={goAfterTutorial}
+              onSkip={goAfterTutorial}
             />
           ) : route.name === 'home' ? (
             <HomeScreen
@@ -344,7 +349,7 @@ export default function App() {
               currentLevel={Math.min(progress.unlocked, TOTAL_LEVELS)}
               totalStars={stars}
               dailyDone={dailyDone}
-              onPlay={() => setRoute({ name: 'game', levelNumber: Math.min(progress.unlocked, TOTAL_LEVELS) })}
+              onPlay={() => { setPlayAfterProfile(true); setRoute({ name: 'profiles' }); }}
               onLevels={() => setRoute({ name: 'levels' })}
               onDaily={() => setRoute({ name: 'game', levelNumber: null })}
               onSettings={() => setRoute({ name: 'settings' })}
@@ -382,7 +387,7 @@ export default function App() {
                   void saveProfiles(next);
                   return next;
                 });
-                setRoute({ name: 'home' });
+                goAfterProfile(false);
               }}
               onCreate={(p) => {
                 setProfiles((prev) => {
@@ -391,9 +396,9 @@ export default function App() {
                   void saveProfiles(next);
                   return next;
                 });
-                setRoute({ name: 'home' });
+                goAfterProfile(true);
               }}
-              onBack={() => setRoute({ name: 'home' })}
+              onBack={() => { setPlayAfterProfile(false); setRoute({ name: 'home' }); }}
             />
           ) : route.name === 'parental' ? (
             <ParentalDashboardScreen
