@@ -5,7 +5,7 @@
 // calcul. Aucun accès n'est possible sans franchir cette porte ; en cas
 // d'échec répété, le verrouillage progressif s'applique.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Dict } from '../i18n';
 import type { Theme } from '../ui/theme';
@@ -42,6 +42,9 @@ export default function ParentalGate({
   const [lockedUntil, setLockedUntil] = useState(0);
   const [now, setNow] = useState(Date.now());
   const [challenge, setChallenge] = useState(() => makeChallenge());
+  // La dérivation du PIN (scrypt, ~1 s) est volontairement coûteuse : on
+  // affiche un indicateur pour que l'attente soit lisible.
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -60,8 +63,11 @@ export default function ParentalGate({
   const secondsLeft = Math.max(0, Math.ceil((lockedUntil - now) / 1000));
 
   const submitPin = useCallback(async () => {
-    if (pin.length < 4 || locked) return;
+    if (pin.length < 4 || locked || checking) return;
+    setChecking(true);
+    setError(null);
     const res = await checkPin(pin);
+    setChecking(false);
     if (res.ok) {
       sound.play('click');
       onSuccess();
@@ -75,7 +81,7 @@ export default function ParentalGate({
     } else {
       setError(res.failsLeft > 0 ? `${t.gateWrong} (${res.failsLeft})` : t.gateWrong);
     }
-  }, [pin, locked, onSuccess, t]);
+  }, [pin, locked, checking, onSuccess, t]);
 
   const submitAnswer = useCallback(() => {
     if (locked) return;
@@ -125,18 +131,22 @@ export default function ParentalGate({
               keyboardType="number-pad"
               secureTextEntry
               maxLength={6}
-              editable={!locked}
+              editable={!locked && !checking}
+              autoFocus
               accessibilityLabel={t.gatePinPrompt}
               style={[styles.input, { color: theme.text, backgroundColor: theme.panel, borderColor: theme.panelBorder }]}
             />
             <Pressable
               testID="gate-submit-pin"
-              disabled={locked || pin.length < 4}
+              disabled={locked || pin.length < 4 || checking}
               onPress={() => void submitPin()}
-              style={[styles.btn, { backgroundColor: locked || pin.length < 4 ? theme.panel : theme.accent, borderColor: theme.panelBorder }]}
+              style={[styles.btn, { backgroundColor: locked || pin.length < 4 || checking ? theme.panel : theme.accent, borderColor: theme.panelBorder }]}
             >
-              <Text style={{ color: locked || pin.length < 4 ? theme.subtext : '#FFF', fontWeight: '900', fontSize: 16 }}>{t.ok}</Text>
+              {checking
+                ? <ActivityIndicator color={theme.accent} />
+                : <Text style={{ color: locked || pin.length < 4 ? theme.subtext : '#FFF', fontWeight: '900', fontSize: 16 }}>{t.ok}</Text>}
             </Pressable>
+            <Text testID="gate-busy" style={{ color: theme.subtext, fontSize: 12, marginTop: 8, opacity: checking ? 1 : 0 }}>…</Text>
           </>
         ) : (
           <>

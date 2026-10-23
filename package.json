@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@noble/hashes": "^2.4.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@shopify/react-native-skia": "2.14.0",
     "babel-preset-expo": "~58.0.0",
@@ -43,6 +44,7 @@
     "typecheck": "tsc --noEmit",
     "test:engine": "tsx tools/test-engine.ts",
     "test:child": "tsx tools/test-child.ts",
+    "test:pin": "tsx tools/test-pin.ts",
     "serve:dist": "tsx tools/serve-dist.ts"
   },
   "private": true
