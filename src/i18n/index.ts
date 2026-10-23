@@ -75,36 +75,46 @@ export async function saveLang(lang: Lang): Promise<void> {
 /** Dictionnaire chargé des JSON (clé → texte dans la langue active). */
 export type Dict = Record<string, string>;
 
-const caches: Record<Lang, Dict | null> = {
-  en: null, fr: null, es: null, 'pt-BR': null, de: null, it: null, ru: null, tr: null,
-  ar: null, id: null, ja: null, ko: null, 'zh-Hans': null,
+// Imports statiques : Metro doit les connaître pour le bundle (un require
+// dynamique cassait le bundle web avec un 500).
+import enDict from './locales/en.json';
+import frDict from './locales/fr.json';
+import esDict from './locales/es.json';
+import ptBRDict from './locales/pt-BR.json';
+import deDict from './locales/de.json';
+import itDict from './locales/it.json';
+import ruDict from './locales/ru.json';
+import trDict from './locales/tr.json';
+import arDict from './locales/ar.json';
+import idDict from './locales/id.json';
+import jaDict from './locales/ja.json';
+import koDict from './locales/ko.json';
+import zhHansDict from './locales/zh-Hans.json';
+
+const caches: Record<Lang, Dict> = {
+  en: enDict as Dict, fr: frDict as Dict, es: esDict as Dict, 'pt-BR': ptBRDict as Dict,
+  de: deDict as Dict, it: itDict as Dict, ru: ruDict as Dict, tr: trDict as Dict,
+  ar: arDict as Dict, id: idDict as Dict, ja: jaDict as Dict, ko: koDict as Dict,
+  'zh-Hans': zhHansDict as Dict,
 };
 
-async function ensureLoaded(lang: Lang): Promise<Dict> {
-  if (caches[lang]) return caches[lang]!;
-  const json = require(`./locales/${lang}.json`) as Dict;
-  caches[lang] = json;
-  return json;
+function ensureLoaded(lang: Lang): Dict {
+  return caches[lang];
 }
 
 export function getLangs(): { id: Lang; name: string }[] {
   return LANG_LIST.map((l) => ({ id: l.id, name: l.name }));
 }
 
-/** Récupère un dictionnaire de traduction (asynchrone, avec fallback). */
-export async function loadDict(lang: Lang): Promise<Dict> {
-  let dict = await ensureLoaded(lang);
-  if (lang !== 'en' && !dict) {
-    await ensureLoaded('en');
-    dict = caches.en ?? {};
-  }
-  return dict;
+/** Récupère un dictionnaire de traduction (synchrone, avec fallback). */
+export function loadDict(lang: Lang): Dict {
+  return ensureLoaded(lang);
 }
 
-/** Traduction en direct (asynchrone). */
-export async function t(lang: Lang, key: string): Promise<string> {
-  const dict = await ensureLoaded(lang);
-  return dict[key] ?? (await ensureLoaded('en'))[key] ?? key;
+/** Traduction en direct (synchrone). */
+export function t(lang: Lang, key: string): string {
+  const dict = ensureLoaded(lang);
+  return dict[key] ?? caches.en[key] ?? key;
 }
 
 /** Traductions par langue (chargées une fois pour l'application). */
