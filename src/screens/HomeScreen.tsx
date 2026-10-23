@@ -9,6 +9,9 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import type { Dict } from '../state/i18n';
 import type { Theme } from '../ui/theme';
+import {
+  IconCalendar, IconChevronRight, IconMap, IconPlay, IconSettings, IconStar,
+} from '../ui/icons';
 import { sound } from '../audio/sound';
 
 interface HomeScreenProps {
@@ -29,7 +32,7 @@ function LogoSnake() {
   useEffect(() => {
     t.value = withRepeat(withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.sin) }), -1, true);
   }, [t]);
-  const segments = ['#FFC93C', '#8BD450', '#3FA7FF', '#9B5DE5', '#F15BB5'];
+  const segments = ['#F2D94E', '#9BDD4A', '#0A9BEF', '#C9A0F5', '#E89BDD'];
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
       {segments.map((color, i) => (
@@ -73,18 +76,18 @@ function LogoSegment({ color, index, phase, isHead }: {
 }
 
 function MenuButton({ icon, label, sub, onPress, theme, primary }: {
-  icon: string; label: string; sub?: string; onPress: () => void; theme: Theme; primary?: boolean;
+  icon: React.ReactNode; label: string; sub?: string; onPress: () => void; theme: Theme; primary?: boolean;
 }) {
   const content = (
     <>
-      <Text style={{ fontSize: 23 }}>{icon}</Text>
+      {icon}
       <View style={{ flex: 1 }}>
         <Text style={{ color: primary ? '#FFF' : theme.text, fontWeight: '900', fontSize: 17.5 }}>{label}</Text>
         {!!sub && (
           <Text style={{ color: primary ? 'rgba(255,255,255,0.85)' : theme.subtext, fontSize: 12.5, fontWeight: '600' }}>{sub}</Text>
         )}
       </View>
-      <Text style={{ color: primary ? '#FFF' : theme.subtext, fontSize: 19, fontWeight: '800' }}>›</Text>
+      <IconChevronRight size={20} color={primary ? '#FFF' : theme.subtext} />
     </>
   );
   const style = ({ pressed }: { pressed: boolean }) => [
@@ -119,16 +122,17 @@ export default function HomeScreen({
         <Text style={{ color: theme.subtext, fontSize: 14.5, fontWeight: '600', marginTop: 5, textAlign: 'center' }}>
           {t.tagline}
         </Text>
-        <View style={[styles.starsChip, { backgroundColor: theme.panel, borderColor: theme.panelBorder }]}>
-          <Text style={{ color: theme.text, fontWeight: '800', fontSize: 14 }}>⭐ {totalStars} {t.stars}</Text>
+        <View style={[styles.starsChip, { backgroundColor: theme.panel, borderColor: theme.panelBorder, flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+          <IconStar size={16} />
+          <Text style={{ color: theme.text, fontWeight: '800', fontSize: 14 }}>{totalStars} {t.stars}</Text>
         </View>
       </View>
 
       <View style={{ gap: 13, marginTop: 38 }}>
-        <MenuButton icon="▶️" label={t.play} sub={`${t.level} ${currentLevel}`} theme={theme} primary onPress={click(onPlay)} />
-        <MenuButton icon="🗺" label={t.levels} theme={theme} onPress={click(onLevels)} />
-        <MenuButton icon="📅" label={t.daily} sub={dailyDone ? t.dailyDone : undefined} theme={theme} onPress={click(onDaily)} />
-        <MenuButton icon="⚙️" label={t.settings} theme={theme} onPress={click(onSettings)} />
+        <MenuButton icon={<IconPlay size={24} color="#FFF" />} label={t.play} sub={`${t.level} ${currentLevel}`} theme={theme} primary onPress={click(onPlay)} />
+        <MenuButton icon={<IconMap size={24} color={theme.text} />} label={t.levels} theme={theme} onPress={click(onLevels)} />
+        <MenuButton icon={<IconCalendar size={24} color={theme.text} />} label={t.daily} sub={dailyDone ? t.dailyDone : undefined} theme={theme} onPress={click(onDaily)} />
+        <MenuButton icon={<IconSettings size={24} color={theme.text} />} label={t.settings} theme={theme} onPress={click(onSettings)} />
       </View>
 
       <Text style={{

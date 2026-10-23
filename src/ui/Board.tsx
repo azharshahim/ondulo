@@ -1,16 +1,21 @@
 // ─── Plateau de jeu ────────────────────────────────────────────────────────
 // Rendu inspiré des captures de référence :
-//  • serpents en « tube » épais (≈70 % de case) dessiné en SVG : chemin
-//    lissé par courbes de Bézier (coudes arrondis, extrémités capsule),
-//    dégradé radial clair haut-gauche → foncé, reflet brillant, ombre
-//    portée douce, liseré clair ; les points du corps sont interpolés
-//    (rAF) pour un suivi fluide avec un léger décalage entre segments ;
+//  • serpents en « tube » (58 % de case) dessiné en SVG : chemin lissé par
+//    courbes de Bézier (coudes arrondis, extrémités capsule), dégradé
+//    radial clair haut-gauche → foncé, reflet brillant, ombre portée
+//    douce, liseré clair ; les points du corps sont interpolés (rAF) pour
+//    un suivi fluide avec un léger décalage entre segments ;
 //  • tête : gros yeux blancs (pupille + reflet) qui clignent et regardent
 //    vers le doigt ; queue : petite flèche sombre discrète ;
-//  • trous : anneau épais coloré, intérieur sombre profond, halo pulsant ;
+//  • trous : anneau coloré, intérieur sombre profond, halo CONTENU dans
+//    la case du trou (il ne dépasse jamais du plateau) ;
 //  • cases bleu très clair biseautées sur fond sombre dégradé.
-// Les règles ne changent pas : le glisser (gesture-handler) remonte chaque
-// franchissement de case au moteur via `attemptMove`.
+// Règles : le moteur (engine.ts) est la seule source de vérité. Le pas de
+// glisser est choisi par engine.nextDragStep et chaque franchissement de
+// case est validé par engine.tryMove via `attemptMove`. L'extrémité
+// affichée ne suit le doigt que dans un rayon bridé autour de sa case
+// logique : visuellement, un serpent ne peut donc jamais recouvrir un
+// autre serpent, même doigt rapide ou bloqué.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -19,12 +24,14 @@ import Animated, {
   Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming,
 } from 'react-native-reanimated';
 import Svg, {
-  Circle, Defs, Path, Polygon, RadialGradient, Stop, Text as SvgText,
+  Circle, Defs, Path, Polygon, RadialGradient, Stop,
 } from 'react-native-svg';
 import type {
   Cell, End, GameState, HoleState, LevelDef, MoveResult, SnakeState,
 } from '../game/types';
 import { COLORS } from '../game/colors';
+import { nextDragStep } from '../game/engine';
+import { ColorSymbol, IconCheck } from './icons';
 import type { SkinId } from '../state/storage';
 import type { Theme } from './theme';
 
@@ -96,8 +103,18 @@ function targetsFromState(
     if (snake.absorbed) continue;
     const pts = snake.cells.map((c) => centerOf(c, cell));
     if (dragPt && dragPt.snakeId === snake.id) {
-      if (dragPt.end === 'head') pts[0] = { x: dragPt.x, y: dragPt.y };
-      else pts[pts.length - 1] = { x: dragPt.x, y: dragPt.y };
+      // Extrémité saisie : elle suit le doigt UNIQUEMENT dans un rayon
+      // bridé (0,34 case) autour du centre de sa case logique — la case
+      // validée par le moteur. Elle ne peut donc jamais être dessinée
+      // par-dessus la case voisine (et son éventuel occupant).
+      const idx = dragPt.end === 'head' ? 0 : pts.length - 1;
+      const base = pts[idx];
+      const dx = dragPt.x - base.x;
+      const dy = dragPt.y - base.y;
+      const dist = Math.hypot(dx, dy);
+      const maxOff = cell * 0.34;
+      const k = dist > maxOff ? maxOff / dist : 1;
+      pts[idx] = { x: base.x + dx * k, y: base.y + dy * k };
     }
     out[snake.id] = pts;
   }
@@ -118,9 +135,10 @@ function Eyes({ cell, look }: { cell: number; look: { dx: number; dy: number } }
     );
   }, [blink]);
   const style = useAnimatedStyle(() => ({ transform: [{ scaleY: blink.value }] }));
-  const eye = cell * 0.21;
-  const pupil = cell * 0.105;
-  const off = cell * 0.045;
+  // Gros yeux : ≈ 32 % de la largeur du corps (corps = 0,58 case).
+  const eye = cell * 0.185;
+  const pupil = cell * 0.10;
+  const off = cell * 0.04;
   return (
     <Animated.View style={[{ flexDirection: 'row', gap: cell * 0.055 }, style]}>
       {[0, 1].map((i) => (
@@ -185,9 +203,21 @@ function SnakeTube({
   moving: boolean; sinkingSnake: boolean;
 }) {
   const info = COLORS[snake.color];
-  const w = cell * 0.7; // largeur du corps ≈ 70 % d'une case
+  const w = cell * 0.58; // largeur du corps = 58 % d'une case
   const d = smoothPath(points);
   const gid = `grad-${snake.id.replace(/[^a-zA-Z0-9]/g, '')}-${snake.color}`;
+  // Dégradé en coordonnées absolues (userSpaceOnUse) : avec un dégradé
+  // relatif à la boîte englobante, un serpent parfaitement droit (boîte
+  // de hauteur ou largeur nulle) dégénérait en teinte claire délavée.
+  const xs = points.map((p) => p.x);
+  const ys = points.map((p) => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const gw = Math.max(maxX - minX, cell);
+  const gh = Math.max(maxY - minY, cell);
+  const gradCx = minX + gw * 0.34;
+  const gradCy = minY + gh * 0.24;
+  const gradR = Math.max(gw, gh) * 0.95;
 
   // Respiration douce + squash & stretch léger pendant le déplacement.
   const breath = useSharedValue(1);
@@ -249,7 +279,7 @@ function SnakeTube({
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, wrapStyle]}>
       <Svg width={boardWidth} height={boardHeight} style={{ position: 'absolute', left: 0, top: 0 }}>
         <Defs>
-          <RadialGradient id={gid} cx="36%" cy="26%" r="88%">
+          <RadialGradient id={gid} gradientUnits="userSpaceOnUse" cx={gradCx} cy={gradCy} r={gradR}>
             {gradientStops}
           </RadialGradient>
         </Defs>
@@ -259,9 +289,9 @@ function SnakeTube({
           strokeLinecap="round" strokeLinejoin="round" fill="none"
           transform={`translate(0 ${cell * 0.075})`} />
         {/* Liseré clair (bord inférieur lumineux) */}
-        <Path d={d} stroke={info.light} strokeWidth={w + cell * 0.05}
-          strokeLinecap="round" strokeLinejoin="round" fill="none" opacity={0.5}
-          transform={`translate(0 ${cell * 0.018})`} />
+        <Path d={d} stroke={info.light} strokeWidth={w + cell * 0.03}
+          strokeLinecap="round" strokeLinejoin="round" fill="none" opacity={0.4}
+          transform={`translate(0 ${cell * 0.014})`} />
         {/* Corps principal en dégradé radial */}
         <Path d={d} stroke={`url(#${gid})`} strokeWidth={w}
           strokeLinecap="round" strokeLinejoin="round" fill="none" />
@@ -284,17 +314,19 @@ function SnakeTube({
           );
         })}
 
-        {/* Symboles daltoniens le long du corps */}
-        {colorblind && points.slice(1).map((p, i) => (
-          <SvgText key={i} x={p.x} y={p.y + cell * 0.09} fontSize={cell * 0.25}
-            fontWeight="900" fill="#FFFFFF" textAnchor="middle" opacity={0.92}>
-            {info.symbol}
-          </SvgText>
-        ))}
-
         {/* Flèche de queue */}
         {arrow && <Polygon points={arrow} fill={info.dark} opacity={0.42} />}
       </Svg>
+
+      {/* Symboles daltoniens (formes SVG, aucun glyphe) le long du corps */}
+      {colorblind && points.slice(1).map((p, i) => (
+        <View key={i} pointerEvents="none" style={{
+          position: 'absolute', left: p.x - cell * 0.14, top: p.y - cell * 0.14,
+          width: cell * 0.28, height: cell * 0.28, alignItems: 'center', justifyContent: 'center',
+        }}>
+          <ColorSymbol colorId={snake.color} size={cell * 0.26} />
+        </View>
+      ))}
 
       {points.length > 1 && (
         <HeadEyes head={points[0]} neck={points[1]} cell={cell} look={look} faded={sinkingSnake} />
@@ -303,25 +335,28 @@ function SnakeTube({
   );
 }
 
-// ─── Un trou : anneau épais, intérieur profond, halo pulsant ───────────────
-function HoleView({ hole, cell, theme, near }: {
-  hole: HoleState; cell: number; theme: Theme; near: boolean;
+// ─── Un trou : anneau plus fin, intérieur bien sombre, halo contenu ───────
+// Le halo est dimensionné pour rester DANS la case du trou (≤ 0,97 case
+// au maximum de sa pulsation) : il ne dépasse jamais du plateau.
+function HoleView({ hole, cell, near }: {
+  hole: HoleState; cell: number; near: boolean;
 }) {
   const info = COLORS[hole.color];
   const pulse = useSharedValue(1);
   useEffect(() => {
     pulse.value = withRepeat(
-      withTiming(near ? 1.55 : 1.22, { duration: near ? 360 : 950, easing: Easing.inOut(Easing.sin) }),
+      withTiming(near ? 1.16 : 1.07, { duration: near ? 380 : 1000, easing: Easing.inOut(Easing.sin) }),
       -1, true,
     );
   }, [near, pulse]);
   const glowStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulse.value }],
-    opacity: near ? 0.55 : 0.28,
+    opacity: near ? 0.5 : 0.25,
   }));
   const ctr = centerOf(hole.cell, cell);
-  const size = cell * 0.92;
-  const inner = size * 0.58;
+  const size = cell * 0.8;
+  const inner = size * 0.6;
+  const glowSize = cell * 0.84;
   if (hole.filled) {
     return (
       <View pointerEvents="none" style={{
@@ -331,53 +366,46 @@ function HoleView({ hole, cell, theme, near }: {
         opacity: 0.85, zIndex: 2,
       }}>
         <View style={{
-          width: inner, height: inner, borderRadius: inner / 2, backgroundColor: '#0B1C30',
+          width: inner, height: inner, borderRadius: inner / 2, backgroundColor: '#081728',
           alignItems: 'center', justifyContent: 'center',
         }}>
-          <Text style={{ color: info.light, fontSize: cell * 0.3, fontWeight: '900' }}>✓</Text>
+          <IconCheck size={cell * 0.3} color={info.light} />
         </View>
       </View>
     );
   }
   return (
     <View pointerEvents="none" style={{
-      position: 'absolute', left: ctr.x - size / 2, top: ctr.y - size / 2,
-      width: size, height: size, zIndex: 2, alignItems: 'center', justifyContent: 'center',
+      position: 'absolute', left: ctr.x - cell / 2, top: ctr.y - cell / 2,
+      width: cell, height: cell, zIndex: 2, alignItems: 'center', justifyContent: 'center',
     }}>
-      {/* Halo lumineux pulsant */}
+      {/* Halo lumineux pulsant, contenu dans la case */}
       <Animated.View style={[{
-        position: 'absolute', width: size, height: size, borderRadius: size / 2,
+        position: 'absolute', width: glowSize, height: glowSize, borderRadius: glowSize / 2,
         backgroundColor: info.main,
-        shadowColor: info.main, shadowOpacity: 0.8, shadowRadius: 12,
-        shadowOffset: { width: 0, height: 0 },
       }, glowStyle]} />
-      {/* Anneau épais : bord sombre puis couleur (léger volume) */}
+      {/* Anneau : bord sombre puis couleur (léger volume) */}
       <View style={{
         position: 'absolute', width: size, height: size, borderRadius: size / 2,
         backgroundColor: info.dark,
-        shadowColor: '#081126', shadowOpacity: 0.35, shadowRadius: 5,
-        shadowOffset: { width: 0, height: 3 }, elevation: 4,
+        shadowColor: '#081126', shadowOpacity: 0.35, shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 }, elevation: 3,
       }} />
       <View style={{
-        position: 'absolute', width: size - 5, height: size - 5, borderRadius: (size - 5) / 2,
-        backgroundColor: info.main, top: 1.5,
+        position: 'absolute', width: size - 4, height: size - 4, borderRadius: (size - 4) / 2,
+        backgroundColor: info.main, top: cell / 2 - (size - 4) / 2 - size * 0.02,
       }} />
       {/* Intérieur sombre avec profondeur (ombre intérieure simulée) */}
       <View style={{
         width: inner, height: inner, borderRadius: inner / 2,
-        backgroundColor: '#0B1C30', borderWidth: 2, borderColor: 'rgba(0,0,0,0.40)',
+        backgroundColor: '#081728', borderWidth: 2, borderColor: 'rgba(0,0,0,0.45)',
         alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
       }}>
         <View style={{
           position: 'absolute', top: -inner * 0.18, width: inner * 0.92, height: inner * 0.62,
-          borderRadius: inner / 2, backgroundColor: '#040B16',
+          borderRadius: inner / 2, backgroundColor: '#02060D',
         }} />
-        <Text style={{
-          color: info.light, fontSize: cell * 0.19, fontWeight: '900', opacity: 0.95,
-          textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 3,
-        }}>
-          {info.symbol}
-        </Text>
+        <ColorSymbol colorId={hole.color} size={cell * 0.2} color={info.light} />
       </View>
     </View>
   );
@@ -546,50 +574,44 @@ export default function Board(props: BoardProps) {
     dragPtRef.current = { snakeId: active.snakeId, end: active.end, x, y };
     setDrag({ snakeId: active.snakeId, end: active.end, x, y });
     const finger = { r: Math.floor(y / cell), c: Math.floor(x / cell) };
-    // Avance case par case vers le doigt (jusqu'à 4 cases par événement).
-    for (let step = 0; step < 4; step++) {
+    const lvl = propsRef.current.level;
+    // Avance STRICTEMENT case par case vers le doigt : le choix du pas est
+    // délégué à engine.nextDragStep (fonction partagée avec les tests
+    // automatisés) et chaque pas est validé par le moteur via attemptMove.
+    // Au premier pas interdit, on s'arrête : le serpent reste bloqué là,
+    // même si le doigt continue plus loin.
+    for (let step = 0; step < 6; step++) {
       const st = latestRef.current;
       const snake = st.snakes.find((s) => s.id === active.snakeId);
       if (!snake || snake.absorbed) { dragRef.current = null; dragPtRef.current = null; return; }
-      const endCell = active.end === 'head' ? snake.cells[0] : snake.cells[snake.cells.length - 1];
-      if (endCell.r === finger.r && endCell.c === finger.c) break;
-      const dr = finger.r - endCell.r;
-      const dc = finger.c - endCell.c;
-      const attempts: Cell[] = [];
-      if (Math.abs(dr) >= Math.abs(dc) && dr !== 0) attempts.push({ r: endCell.r + Math.sign(dr), c: endCell.c });
-      if (dc !== 0) attempts.push({ r: endCell.r, c: endCell.c + Math.sign(dc) });
-      if (dr !== 0 && attempts[0]?.c === endCell.c && Math.abs(dc) > Math.abs(dr)) {
-        attempts.reverse();
-      }
-      let progressed = false;
-      for (const target of attempts) {
-        const res = propsRef.current.attemptMove(active.snakeId, active.end, target);
-        if (res.status === 'moved') {
-          latestRef.current = res.state;
-          propsRef.current.onStep();
-          setMovingId(active.snakeId);
-          if (movingTimer.current) clearTimeout(movingTimer.current);
-          movingTimer.current = setTimeout(() => setMovingId(null), 240);
-          const ctr = centerOf(target, cell);
-          const info = COLORS[snake.color];
-          setTrail((prev) => [...prev.slice(-7), { id: ++trailId.current, x: ctr.x, y: ctr.y, color: info.main }]);
-          if (trailTimer.current) clearTimeout(trailTimer.current);
-          trailTimer.current = setTimeout(() => setTrail([]), 650);
-          progressed = true;
-          break;
-        }
-        if (res.status === 'absorbed') {
-          dragRef.current = null;
-          dragPtRef.current = null;
-          setDrag(null);
-          return;
-        }
-      }
-      if (!progressed) {
-        const t = attempts[0];
-        if (t) triggerBlocked(`${active.snakeId}-${active.end}-${t.r},${t.c}`);
+      const stepMove = nextDragStep(lvl, st, active.snakeId, active.end, finger);
+      if (!stepMove) {
+        triggerBlocked(`${active.snakeId}-${active.end}-bloque`);
         break;
       }
+      const res = propsRef.current.attemptMove(stepMove.snakeId, stepMove.end, stepMove.target);
+      if (res.status === 'moved') {
+        latestRef.current = res.state;
+        propsRef.current.onStep();
+        setMovingId(active.snakeId);
+        if (movingTimer.current) clearTimeout(movingTimer.current);
+        movingTimer.current = setTimeout(() => setMovingId(null), 240);
+        const ctr = centerOf(stepMove.target, cell);
+        const info = COLORS[snake.color];
+        setTrail((prev) => [...prev.slice(-7), { id: ++trailId.current, x: ctr.x, y: ctr.y, color: info.main }]);
+        if (trailTimer.current) clearTimeout(trailTimer.current);
+        trailTimer.current = setTimeout(() => setTrail([]), 650);
+        continue;
+      }
+      if (res.status === 'absorbed') {
+        dragRef.current = null;
+        dragPtRef.current = null;
+        setDrag(null);
+        return;
+      }
+      // Le moteur a refusé le pas proposé : on s'arrête immédiatement.
+      triggerBlocked(`${active.snakeId}-${active.end}-refuse`);
+      break;
     }
   }, [cell, triggerBlocked]);
 
@@ -628,15 +650,14 @@ export default function Board(props: BoardProps) {
   };
 
   const hintColor = hint ? COLORS[state.snakes.find((s) => s.id === hint.snakeId)?.color ?? 'corail'] : null;
-  const framePad = Math.max(8, cell * 0.16);
 
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View style={[{ width: boardWidth, height: boardHeight, alignSelf: 'center' }, shakeStyle]}>
-        {/* Cadre sombre du plateau */}
+      <Animated.View testID="game-board" style={[{ width: boardWidth, height: boardHeight, alignSelf: 'center' }, shakeStyle]}>
+        {/* Cadre sombre du plateau (contenu dans la largeur du plateau) */}
         <View pointerEvents="none" style={{
-          position: 'absolute', left: -framePad, top: -framePad,
-          right: -framePad, bottom: -framePad, borderRadius: cell * 0.34,
+          position: 'absolute', left: 0, top: 0,
+          right: 0, bottom: 0, borderRadius: cell * 0.3,
           backgroundColor: theme.isDark ? 'rgba(5,10,26,0.55)' : 'rgba(18,38,66,0.20)',
           borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)',
           shadowColor: '#020617', shadowOpacity: 0.45, shadowRadius: 14,
@@ -684,7 +705,7 @@ export default function Board(props: BoardProps) {
               ) <= 2,
           );
           return (
-            <HoleView key={hole.id} hole={hole} cell={cell} theme={theme} near={!!snake && !hole.filled} />
+            <HoleView key={hole.id} hole={hole} cell={cell} near={!!snake && !hole.filled} />
           );
         })}
 

@@ -21,6 +21,10 @@ import type { Dict } from '../state/i18n';
 import type { Theme } from '../ui/theme';
 import Board, { type HintVisual, type SinkingInfo } from '../ui/Board';
 import Confetti from '../ui/Confetti';
+import {
+  IconBulb, IconCalendar, IconHome, IconMap, IconNext, IconPause, IconPlay,
+  IconRestart, IconSnake, IconStar, IconTv, IconUndo,
+} from '../ui/icons';
 import { sound } from '../audio/sound';
 
 interface GameScreenProps {
@@ -34,9 +38,9 @@ interface GameScreenProps {
   onNextLevel: () => void;
 }
 
-function Pill({ label, icon, onPress, disabled, theme, accent }: {
-  label: string; icon: string; onPress: () => void; disabled?: boolean;
-  theme: Theme; accent?: boolean;
+function Pill({ label, icon, onPress, disabled, theme, accent, style: extraStyle }: {
+  label: string; icon: React.ReactNode; onPress: () => void; disabled?: boolean;
+  theme: Theme; accent?: boolean; style?: object;
 }) {
   return (
     <Pressable
@@ -49,9 +53,10 @@ function Pill({ label, icon, onPress, disabled, theme, accent }: {
           borderColor: theme.panelBorder,
           opacity: disabled ? 0.4 : pressed ? 0.75 : 1,
         },
+        extraStyle,
       ]}
     >
-      <Text style={{ fontSize: 19 }}>{icon}</Text>
+      {icon}
       <Text style={{ color: accent ? '#FFF' : theme.text, fontWeight: '700', fontSize: 13.5 }}>{label}</Text>
     </Pressable>
   );
@@ -64,9 +69,9 @@ function VictoryStar({ filled, delay, size }: { filled: boolean; delay: number; 
   }, [delay, s]);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: s.value }, { rotate: `${(1 - s.value) * -40}deg` }] }));
   return (
-    <Animated.Text style={[{ fontSize: size, color: filled ? '#FFC93C' : 'rgba(128,128,160,0.35)' }, style]}>
-      ★
-    </Animated.Text>
+    <Animated.View style={style}>
+      <IconStar size={size} color={filled ? '#FFC93C' : 'rgba(128,128,160,0.35)'} />
+    </Animated.View>
   );
 }
 
@@ -229,9 +234,11 @@ export default function GameScreen({
     );
   }
 
+  // Plateau sur toute la largeur moins 16 px de marge de chaque côté
+  // (borné en hauteur pour rester entre les deux barres).
   const cellSize = Math.max(
     26,
-    Math.floor(Math.min((screenW - 28) / level.cols, (screenH * 0.44) / level.rows)),
+    Math.floor(Math.min((screenW - 32) / level.cols, (screenH * 0.46) / level.rows)),
   );
   const boardWidth = cellSize * level.cols;
   const hasNext = !isDaily && (levelNumber ?? 0) < TOTAL_LEVELS;
@@ -244,15 +251,26 @@ export default function GameScreen({
           onPress={() => { sound.play('click'); setPaused(true); }}
           style={[styles.iconBtn, { backgroundColor: theme.panel, borderColor: theme.panelBorder }]}
         >
-          <Text style={{ fontSize: 18, color: theme.text }}>⏸</Text>
+          <IconPause size={19} color={theme.text} />
         </Pressable>
         <View style={{ alignItems: 'center', flex: 1 }}>
-          <Text style={{ color: theme.text, fontWeight: '900', fontSize: 19 }}>
-            {isDaily ? `📅 ${t.daily}` : `${t.level} ${levelNumber}`}
-          </Text>
-          <Text style={{ color: theme.subtext, fontSize: 12.5, fontWeight: '600' }}>
-            {level.snakes.length} 🐍 • {t.optimal} : {level.optimal}
-          </Text>
+          {isDaily ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <IconCalendar size={18} color={theme.text} />
+              <Text style={{ color: theme.text, fontWeight: '900', fontSize: 19 }}>{t.daily}</Text>
+            </View>
+          ) : (
+            <Text style={{ color: theme.text, fontWeight: '900', fontSize: 19 }}>
+              {`${t.level} ${levelNumber}`}
+            </Text>
+          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 1 }}>
+            <Text style={{ color: theme.subtext, fontSize: 12.5, fontWeight: '700' }}>{level.snakes.length}</Text>
+            <IconSnake size={17} color={theme.subtext} />
+            <Text style={{ color: theme.subtext, fontSize: 12.5, fontWeight: '600' }}>
+              • {t.optimal} : {level.optimal}
+            </Text>
+          </View>
         </View>
         <View style={[styles.movesChip, { backgroundColor: theme.panel, borderColor: theme.panelBorder }]}>
           <Text style={{ color: theme.subtext, fontSize: 11, fontWeight: '700' }}>{t.moves.toUpperCase()}</Text>
@@ -261,7 +279,7 @@ export default function GameScreen({
       </View>
 
       {gs.moves === 0 && !victory && (
-        <Text style={{ color: theme.subtext, textAlign: 'center', fontSize: 13, marginTop: 2, paddingHorizontal: 24 }}>
+        <Text style={{ color: theme.subtext, textAlign: 'center', fontSize: 12, marginTop: 2, paddingHorizontal: 24 }}>
           {levelNumber === 1 ? t.howTo : t.dragHint}
         </Text>
       )}
@@ -289,11 +307,11 @@ export default function GameScreen({
         />
       </View>
 
-      {/* Barre du bas */}
+      {/* Barre du bas : 16 px de marge de chaque côté, boutons de largeur égale */}
       <View style={styles.bottomBar}>
-        <Pill icon="↩️" label={t.undo} theme={theme} onPress={undo} disabled={!canUndo || !!sinking} />
-        <Pill icon="💡" label={t.hint} theme={theme} accent onPress={() => { sound.play('click'); setAdOpen(true); }} disabled={!!sinking || !!victory} />
-        <Pill icon="⟳" label={t.restart} theme={theme} onPress={restart} disabled={!!sinking} />
+        <Pill icon={<IconUndo size={19} color={theme.text} />} label={t.undo} theme={theme} style={{ flex: 1 }} onPress={undo} disabled={!canUndo || !!sinking} />
+        <Pill icon={<IconBulb size={19} color="#FFF" />} label={t.hint} theme={theme} accent style={{ flex: 1 }} onPress={() => { sound.play('click'); setAdOpen(true); }} disabled={!!sinking || !!victory} />
+        <Pill icon={<IconRestart size={19} color={theme.text} />} label={t.restart} theme={theme} style={{ flex: 1 }} onPress={restart} disabled={!!sinking} />
       </View>
 
       <Confetti visible={!!victory} onDone={() => undefined} />
@@ -305,13 +323,14 @@ export default function GameScreen({
             <Text style={[styles.modalTitle, { color: theme.text }]}>{t.pause}</Text>
             <Text style={{ color: theme.subtext, fontSize: 13.5, lineHeight: 19, marginBottom: 14 }}>{t.howTo}</Text>
             {[
-              { label: `▶️ ${t.resume}`, fn: () => setPaused(false) },
-              { label: `⟳ ${t.restart}`, fn: () => { setPaused(false); restart(); } },
-              { label: `🗺 ${t.levels}`, fn: () => { setPaused(false); onOpenLevels(); } },
-              { label: `🏠 ${t.home}`, fn: () => { setPaused(false); onExitHome(); } },
+              { icon: <IconPlay size={18} color={theme.text} />, label: t.resume, fn: () => setPaused(false) },
+              { icon: <IconRestart size={18} color={theme.text} />, label: t.restart, fn: () => { setPaused(false); restart(); } },
+              { icon: <IconMap size={18} color={theme.text} />, label: t.levels, fn: () => { setPaused(false); onOpenLevels(); } },
+              { icon: <IconHome size={18} color={theme.text} />, label: t.home, fn: () => { setPaused(false); onExitHome(); } },
             ].map((b) => (
               <Pressable key={b.label} onPress={() => { sound.play('click'); b.fn(); }}
-                style={[styles.modalBtn, { backgroundColor: theme.panel, borderColor: theme.panelBorder }]}>
+                style={[styles.modalBtn, { backgroundColor: theme.panel, borderColor: theme.panelBorder, flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
+                {b.icon}
                 <Text style={{ color: theme.text, fontWeight: '700', fontSize: 15 }}>{b.label}</Text>
               </Pressable>
             ))}
@@ -323,7 +342,7 @@ export default function GameScreen({
       <Modal visible={adOpen} transparent animationType="fade" onRequestClose={() => { if (adCount === 0) setAdOpen(false); }}>
         <View style={styles.modalBg}>
           <View style={[styles.modalCard, { backgroundColor: theme.isDark ? '#1C1C38' : '#FFFFFF', borderColor: theme.panelBorder, alignItems: 'center' }]}>
-            <Text style={{ fontSize: 40 }}>📺</Text>
+            <IconTv size={44} color={theme.accent2} />
             <Text style={[styles.modalTitle, { color: theme.text }]}>{t.adTitle}</Text>
             <Text style={{ color: theme.subtext, fontSize: 13.5, textAlign: 'center', marginBottom: 14 }}>{t.adText}</Text>
             <View style={{ width: '100%', height: 8, borderRadius: 4, backgroundColor: theme.panel, overflow: 'hidden', marginBottom: 16 }}>
@@ -334,9 +353,12 @@ export default function GameScreen({
               disabled={adCount > 0}
               style={[styles.modalBtn, { backgroundColor: adCount > 0 ? theme.panel : theme.accent, borderColor: theme.panelBorder, alignSelf: 'stretch', alignItems: 'center' }]}
             >
-              <Text style={{ color: adCount > 0 ? theme.subtext : '#FFF', fontWeight: '800', fontSize: 15 }}>
-                {adCount > 0 ? `${t.adWait}… ${adCount}s` : `💡 ${t.adShowHint}`}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {adCount === 0 && <IconBulb size={18} color="#FFF" />}
+                <Text style={{ color: adCount > 0 ? theme.subtext : '#FFF', fontWeight: '800', fontSize: 15 }}>
+                  {adCount > 0 ? `${t.adWait}… ${adCount}s` : t.adShowHint}
+                </Text>
+              </View>
             </Pressable>
             {adCount === 0 && (
               <Pressable onPress={() => setAdOpen(false)} style={{ marginTop: 10 }}>
@@ -362,13 +384,13 @@ export default function GameScreen({
               {t.moves} : {victory.moves} • {t.optimal} : {level.optimal}
             </Text>
             <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-              <Pill icon="⟳" label={t.replay} theme={theme} onPress={() => { setVictory(null); restart(); }} />
-              <Pill icon="🗺" label={t.levels} theme={theme} onPress={() => { sound.play('click'); onOpenLevels(); }} />
+              <Pill icon={<IconRestart size={18} color={theme.text} />} label={t.replay} theme={theme} onPress={() => { setVictory(null); restart(); }} />
+              <Pill icon={<IconMap size={18} color={theme.text} />} label={t.levels} theme={theme} onPress={() => { sound.play('click'); onOpenLevels(); }} />
               {hasNext && (
-                <Pill icon="➡️" label={t.next} theme={theme} accent onPress={() => { sound.play('click'); onNextLevel(); }} />
+                <Pill icon={<IconNext size={18} color="#FFF" />} label={t.next} theme={theme} accent onPress={() => { sound.play('click'); onNextLevel(); }} />
               )}
               {isDaily && (
-                <Pill icon="🏠" label={t.home} theme={theme} accent onPress={() => { sound.play('click'); onExitHome(); }} />
+                <Pill icon={<IconHome size={18} color="#FFF" />} label={t.home} theme={theme} accent onPress={() => { sound.play('click'); onExitHome(); }} />
               )}
             </View>
           </View>
@@ -391,10 +413,10 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     flexDirection: 'row', justifyContent: 'center', gap: 10,
-    paddingHorizontal: 14, paddingTop: 10,
+    paddingHorizontal: 16, paddingTop: 10,
   },
   pill: {
-    flexDirection: 'row', alignItems: 'center', gap: 7,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7,
     paddingHorizontal: 15, paddingVertical: 11, borderRadius: 999, borderWidth: 1,
     shadowColor: '#000', shadowOpacity: 0.22, shadowRadius: 5, shadowOffset: { width: 0, height: 3 },
     elevation: 4,

@@ -12,23 +12,48 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { Theme } from './theme';
 
-// ── Orbes douces animées (Reanimated) ──────────────────────────────────────
-function Orb({ x, y, size, color, duration }: { x: string; y: string; size: number; color: string; duration: number }) {
+// ── Petites particules discrètes (rayon 2 à 6 px, opacité 10-25 %) ───────
+// Toujours DERRIÈRE le plateau et l'interface (zIndex 0, pointerEvents
+// none) : elles ne passent jamais devant un élément de jeu.
+function TinyParticles({ theme }: { theme: Theme }) {
+  const dots = useMemo(
+    () => Array.from({ length: 22 }, (_, i) => ({
+      left: `${(i * 41) % 96 + 2}%`,
+      top: `${(i * 29) % 92 + 3}%`,
+      size: 4 + (i % 5) * 2, // diamètre 4 à 12 px (rayon 2 à 6 px)
+      opacity: 0.10 + (i % 4) * 0.05, // 10 % à 25 %
+      duration: 3800 + (i % 6) * 700,
+      color: i % 3 === 0 ? theme.accent : theme.accent2,
+    })),
+    [theme.accent, theme.accent2],
+  );
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { zIndex: 0 }]}>
+      {dots.map((d, i) => (
+        <TinyDot key={i} {...d} />
+      ))}
+    </View>
+  );
+}
+
+function TinyDot({ left, top, size, color, opacity, duration }: {
+  left: string; top: string; size: number; color: string; opacity: number; duration: number;
+}) {
   const t = useSharedValue(0);
   useEffect(() => {
     t.value = withRepeat(withTiming(1, { duration, easing: Easing.inOut(Easing.sin) }), -1, true);
   }, [duration, t]);
   const style = useAnimatedStyle(() => ({
-    transform: [{ translateY: -26 * t.value }, { translateX: 10 * t.value }],
-    opacity: 0.5 + 0.3 * t.value,
+    transform: [{ translateY: -14 * t.value }],
+    opacity: opacity * (0.7 + 0.3 * t.value),
   }));
   return (
     <Animated.View
       pointerEvents="none"
       style={[
         {
-          position: 'absolute', left: x as never, top: y as never, width: size, height: size,
-          borderRadius: size / 2, backgroundColor: color,
+          position: 'absolute', left: left as never, top: top as never,
+          width: size, height: size, borderRadius: size / 2, backgroundColor: color,
         },
         style,
       ]}
@@ -51,14 +76,14 @@ function SkiaParticle({ Circle, def, color }: {
   Circle: any; def: ParticleDef; color: string;
 }) {
   const cy = useSharedValue(def.y);
-  const opacity = useSharedValue(0.3);
+  const opacity = useSharedValue(0.12);
   useEffect(() => {
     cy.value = withRepeat(
-      withTiming(def.y - def.drift, { duration: 4200 + def.delay * 900, easing: Easing.inOut(Easing.sin) }),
+      withTiming(def.y - def.drift, { duration: 5200 + def.delay * 900, easing: Easing.inOut(Easing.sin) }),
       -1, true,
     );
     opacity.value = withRepeat(
-      withTiming(0.75, { duration: 1500 + def.delay * 500, easing: Easing.inOut(Easing.sin) }),
+      withTiming(0.25, { duration: 2100 + def.delay * 500, easing: Easing.inOut(Easing.sin) }),
       -1, true,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -80,8 +105,8 @@ function SkiaParticles({ theme }: { theme: Theme }) {
     () => Array.from({ length: 26 }, (_, i) => ({
       x: ((i * 67) % 360) + 12,
       y: ((i * 113) % 640) + 30,
-      r: 1.4 + (i % 4) * 0.7,
-      drift: 34 + (i % 5) * 11,
+      r: 1.6 + (i % 3) * 0.8,
+      drift: 16 + (i % 5) * 6,
       delay: i % 6,
     })),
     [],
@@ -100,10 +125,8 @@ function SkiaParticles({ theme }: { theme: Theme }) {
 export default function Background({ theme, children }: { theme: Theme; children: React.ReactNode }) {
   return (
     <LinearGradient colors={theme.bgGradient} style={styles.root}>
-      <Orb x="8%" y="12%" size={130} color={theme.accent} duration={5200} />
-      <Orb x="72%" y="6%" size={90} color={theme.accent2} duration={4300} />
-      <Orb x="80%" y="68%" size={150} color={theme.accent2} duration={6100} />
-      <Orb x="-4%" y="78%" size={110} color={theme.accent} duration={4800} />
+      {/* Particules discrètes, derrière tout le reste (zIndex 0). */}
+      <TinyParticles theme={theme} />
       {Platform.OS !== 'web' && (
         <SkiaGuard>
           <SkiaParticles theme={theme} />
@@ -116,5 +139,5 @@ export default function Background({ theme, children }: { theme: Theme; children
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { flex: 1 },
+  content: { flex: 1, zIndex: 1 },
 });

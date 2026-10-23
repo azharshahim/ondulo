@@ -57,6 +57,28 @@ export function holeAt(state: GameState, r: number, c: number) {
   return state.trous.find((h) => !h.filled && h.cell.r === r && h.cell.c === c);
 }
 
+/**
+ * Invariante de sécurité : retourne une description si une même case
+ * appartient à deux serpents (ou deux fois au même), sinon null.
+ * Les serpents NE DOIVENT JAMAIS se superposer.
+ */
+export function detectOverlap(state: GameState): string | null {
+  const seen = new Map<string, string>();
+  for (const s of state.snakes) {
+    if (s.absorbed) continue;
+    for (const cell of s.cells) {
+      const k = keyOf(cell.r, cell.c);
+      const other = seen.get(k);
+      if (other) return `case ${k} partagée par ${other} et ${s.id}`;
+      seen.set(k, s.id);
+    }
+  }
+  return null;
+}
+
+const isDev = (): boolean =>
+  (globalThis as { __DEV__?: boolean }).__DEV__ === true;
+
 export function getEndCell(snake: SnakeState, end: End): Cell {
   return end === 'head' ? snake.cells[0] : snake.cells[snake.cells.length - 1];
 }
@@ -98,8 +120,12 @@ export function tryMove(
     return { status: 'absorbed', state: next, move: { snakeId, end, target }, holeId: hole.id };
   }
 
-  // Occupation : un autre serpent bloque. Son propre corps bloque aussi,
-  // sauf la case de l'extrémité opposée qui se libère pendant le mouvement.
+  // Occupation : calculée sur l'état AVANT le pas. Une case occupée par un
+  // AUTRE serpent (tête, corps ou queue) est infranchissable. Le propre
+  // corps bloque aussi, sauf la case de l'extrémité opposée du serpent qui
+  // bouge : elle se libère pendant ce même pas (la queue recule au moment
+  // où la tête avance), donc aucune superposition n'existe ni avant ni
+  // après le pas. Pour tout autre serpent, cette case reste occupée.
   const occ = occupancy(state);
   const occupant = occ.get(keyOf(target.r, target.c));
   if (occupant) {
@@ -119,6 +145,14 @@ export function tryMove(
     ns.cells = [...ns.cells.slice(1).map((c) => ({ ...c })), { ...target }];
   }
   next.moves += 1;
+
+  // Invariante de sécurité : si le nouvel état superposait deux serpents,
+  // on annule le mouvement (et on le signale en développement).
+  const overlap = detectOverlap(next);
+  if (overlap) {
+    if (isDev()) console.error(`[engine] mouvement annulé : ${overlap}`);
+    return { status: 'blocked', reason: 'occupe' };
+  }
   return { status: 'moved', state: next, move: { snakeId, end, target } };
 }
 
@@ -142,6 +176,93 @@ export function legalMoves(level: LevelDef, state: GameState): Move[] {
 export function applyMove(level: LevelDef, state: GameState, move: Move): GameState {
   const res = tryMove(level, state, move.snakeId, move.end, move.target);
   return res.status === 'blocked' ? state : res.state;
+}
+
+/**
+ * Prochain pas d'un glisser vers une case doigt : fonction PARTAGÉE entre
+ * l'interface (Board) et les tests. Elle ne propose que des pas qui
+ * rapprochent l'extrémité de la case visée, et chaque pas candidat est
+ * validé par tryMove (la seule source de vérité). Retourne null si aucun
+ * pas n'est possible : le serpent reste bloqué là où il est.
+ */
+export function nextDragStep(
+  level: LevelDef,
+  state: GameState,
+  snakeId: string,
+  end: End,
+  fingerCell: Cell,
+): Move | null {
+  const snake = state.snakes.find((s) => s.id === snakeId);
+  if (!snake || snake.absorbed) return null;
+  const from = getEndCell(snake, end);
+  const currentDist = manhattan(from, fingerCell);
+  if (currentDist === 0) return null;
+  const candidates = DIRS
+    .map((d) => ({ r: from.r + d.dr, c: from.c + d.dc }))
+    .filter((t) => manhattan(t, fingerCell) < currentDist)
+    .sort((a, b) => {
+      const byDist = manhattan(a, fingerCell) - manhattan(b, fingerCell);
+      if (byDist !== 0) return byDist;
+      // À distance égale, privilégier l'axe dominant du glisser.
+      const dominantR = Math.abs(fingerCell.r - from.r) >= Math.abs(fingerCell.c - from.c);
+      const score = (t: Cell) => (dominantR ? (t.r !== from.r ? 0 : 1) : (t.c !== from.c ? 0 : 1));
+      return score(a) - score(b);
+    });
+  for (const target of candidates) {
+    const res = tryMove(level, state, snakeId, end, target);
+    if (res.status !== 'blocked') return res.move;
+  }
+  return null;
+}
+
+export interface DragResult {
+  state: GameState;
+  /** Pas effectivement appliqués, un par case. */
+  moves: Move[];
+  /** Id du trou si le glisser s'est terminé par une absorption. */
+  absorbedHoleId?: string;
+  /** Vrai si le serpent s'est arrêté avant la case visée (obstacle). */
+  stopped: boolean;
+}
+
+/**
+ * Glisser complet, STRICTEMENT case par case : applique les pas un par un
+ * via nextDragStep + tryMove et s'arrête au premier pas interdit, même si
+ * la case visée est encore loin (drag très rapide). Utilisé par les tests
+ * automatisés ; l'interface applique la même boucle via attemptMove.
+ */
+export function dragToward(
+  level: LevelDef,
+  initial: GameState,
+  snakeId: string,
+  end: End,
+  fingerCell: Cell,
+  maxSteps = 99,
+): DragResult {
+  let state = initial;
+  const moves: Move[] = [];
+  for (let i = 0; i < maxSteps; i++) {
+    const snakeNow = state.snakes.find((s) => s.id === snakeId);
+    if (!snakeNow || snakeNow.absorbed) break;
+    if (manhattan(getEndCell(snakeNow, end), fingerCell) === 0) {
+      return { state, moves, stopped: false };
+    }
+    const step = nextDragStep(level, state, snakeId, end, fingerCell);
+    if (!step) return { state, moves, stopped: true };
+    const res = tryMove(level, state, step.snakeId, step.end, step.target);
+    if (res.status === 'blocked') return { state, moves, stopped: true };
+    state = res.state;
+    moves.push(res.move);
+    if (res.status === 'absorbed') {
+      return { state, moves, absorbedHoleId: res.holeId, stopped: false };
+    }
+    const snake = state.snakes.find((s) => s.id === snakeId);
+    if (!snake || snake.absorbed) break;
+    if (manhattan(getEndCell(snake, end), fingerCell) === 0) {
+      return { state, moves, stopped: false };
+    }
+  }
+  return { state, moves, stopped: moves.length === 0 };
 }
 
 export function isWin(state: GameState): boolean {

@@ -6,6 +6,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SKINS, type Settings, type SkinId, type ThemeId } from '../state/storage';
 import type { Dict } from '../state/i18n';
 import type { Theme } from '../ui/theme';
+import {
+  IconChevronLeft, IconEye, IconLock, IconMoon, IconMusic, IconSnake, IconSound,
+  IconSparkle, IconStar, IconSun, IconVibrate,
+} from '../ui/icons';
 import { sound } from '../audio/sound';
 
 interface SettingsScreenProps {
@@ -26,11 +30,11 @@ const SKIN_NAMES: Record<SkinId, keyof Dict> = {
 };
 
 const SKIN_PREVIEW: Record<SkinId, [string, string, ...string[]]> = {
-  classique: ['#FF9AA2', '#FF5964'],
-  rayures: ['#9AD1FF', '#3FA7FF'],
-  pois: ['#C6F79B', '#8BD450'],
-  degrade: ['#FFE08A', '#FFC93C', '#DEA400'],
-  arcenciel: ['#FF5964', '#FFC93C', '#8BD450', '#3FA7FF', '#9B5DE5'],
+  classique: ['#F8B4B9', '#EF6B73'],
+  rayures: ['#6EC6FF', '#0A9BEF'],
+  pois: ['#C4EE8E', '#9BDD4A'],
+  degrade: ['#F9E784', '#F2D94E', '#C9A227'],
+  arcenciel: ['#EF6B73', '#F2D94E', '#9BDD4A', '#0A9BEF', '#C9A0F5'],
 };
 
 export default function SettingsScreen({
@@ -38,10 +42,10 @@ export default function SettingsScreen({
 }: SettingsScreenProps) {
   const insets = useSafeAreaInsets();
   const Row = ({ icon, label, value, onToggle }: {
-    icon: string; label: string; value: boolean; onToggle: (v: boolean) => void;
+    icon: React.ReactNode; label: string; value: boolean; onToggle: (v: boolean) => void;
   }) => (
     <View style={[styles.row, { backgroundColor: theme.panel, borderColor: theme.panelBorder }]}>
-      <Text style={{ fontSize: 19 }}>{icon}</Text>
+      {icon}
       <Text style={{ color: theme.text, fontWeight: '700', fontSize: 15, flex: 1 }}>{label}</Text>
       <Switch
         value={value}
@@ -59,14 +63,18 @@ export default function SettingsScreen({
       {children}
     </View>
   );
-  const Chip = ({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) => (
+  const Chip = ({ label, icon, selected, onPress }: {
+    label: string; icon?: React.ReactNode; selected: boolean; onPress: () => void;
+  }) => (
     <Pressable
       onPress={() => { sound.play('click'); onPress(); }}
       style={[styles.chip, {
         backgroundColor: selected ? theme.accent : theme.panel,
         borderColor: selected ? theme.accent : theme.panelBorder,
+        flexDirection: 'row', alignItems: 'center', gap: 7,
       }]}
     >
+      {icon}
       <Text style={{ color: selected ? '#FFF' : theme.text, fontWeight: '800', fontSize: 14 }}>{label}</Text>
     </Pressable>
   );
@@ -78,40 +86,40 @@ export default function SettingsScreen({
           onPress={() => { sound.play('click'); onBack(); }}
           style={[styles.backBtn, { backgroundColor: theme.panel, borderColor: theme.panelBorder }]}
         >
-          <Text style={{ color: theme.text, fontSize: 18, fontWeight: '900' }}>‹</Text>
+          <IconChevronLeft size={20} color={theme.text} />
         </Pressable>
         <Text style={{ color: theme.text, fontSize: 21, fontWeight: '900' }}>{t.settings}</Text>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}>
         <Section title={t.sound}>
-          <Row icon="🔊" label={t.sound} value={settings.sound} onToggle={(v) => onChange({ sound: v })} />
-          <Row icon="🎵" label={t.music} value={settings.music} onToggle={(v) => onChange({ music: v })} />
-          <Row icon="📳" label={t.haptics} value={settings.haptics} onToggle={(v) => onChange({ haptics: v })} />
-          <Row icon="👁" label={t.colorblind} value={settings.colorblind} onToggle={(v) => onChange({ colorblind: v })} />
+          <Row icon={<IconSound size={21} color={theme.text} />} label={t.sound} value={settings.sound} onToggle={(v) => onChange({ sound: v })} />
+          <Row icon={<IconMusic size={21} color={theme.text} />} label={t.music} value={settings.music} onToggle={(v) => onChange({ music: v })} />
+          <Row icon={<IconVibrate size={21} color={theme.text} />} label={t.haptics} value={settings.haptics} onToggle={(v) => onChange({ haptics: v })} />
+          <Row icon={<IconEye size={21} color={theme.text} />} label={t.colorblind} value={settings.colorblind} onToggle={(v) => onChange({ colorblind: v })} />
         </Section>
 
         <Section title={t.language}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Chip label="🇫🇷 Français" selected={settings.lang === 'fr'} onPress={() => onChange({ lang: 'fr' })} />
-            <Chip label="🇬🇧 English" selected={settings.lang === 'en'} onPress={() => onChange({ lang: 'en' })} />
+            <Chip label="FR · Français" selected={settings.lang === 'fr'} onPress={() => onChange({ lang: 'fr' })} />
+            <Chip label="EN · English" selected={settings.lang === 'en'} onPress={() => onChange({ lang: 'en' })} />
           </View>
         </Section>
 
         <Section title={t.theme}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             {([
-              { id: 'sombre' as ThemeId, label: `🌙 ${t.themeDark}` },
-              { id: 'clair' as ThemeId, label: `☀️ ${t.themeLight}` },
-              { id: 'neon' as ThemeId, label: `💜 ${t.themeNeon}` },
+              { id: 'sombre' as ThemeId, label: t.themeDark, icon: <IconMoon size={17} color={settings.theme === 'sombre' ? '#FFF' : theme.text} /> },
+              { id: 'clair' as ThemeId, label: t.themeLight, icon: <IconSun size={17} color={settings.theme === 'clair' ? '#FFF' : theme.text} /> },
+              { id: 'neon' as ThemeId, label: t.themeNeon, icon: <IconSparkle size={17} color={settings.theme === 'neon' ? '#FFF' : theme.text} /> },
             ]).map((th) => (
-              <Chip key={th.id} label={th.label} selected={settings.theme === th.id}
+              <Chip key={th.id} label={th.label} icon={th.icon} selected={settings.theme === th.id}
                 onPress={() => onChange({ theme: th.id })} />
             ))}
           </View>
         </Section>
 
-        <Section title={`${t.skins} (⭐ ${totalStars})`}>
+        <Section title={`${t.skins} (${totalStars})`}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 11 }}>
             {SKINS.map((skin) => {
               const unlocked = totalStars >= skin.starsRequired;
@@ -142,15 +150,19 @@ export default function SettingsScreen({
                         borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.45)',
                       }} />
                     ))}
-                    <Text style={{ fontSize: 17 }}>{unlocked ? '🐍' : '🔒'}</Text>
+                    {unlocked
+                      ? <IconSnake size={22} color="#FFFFFF" />
+                      : <IconLock size={19} color="#FFFFFF" />}
                   </LinearGradient>
                   <Text style={{ color: theme.text, fontWeight: '700', fontSize: 12, textAlign: 'center' }}>
                     {t[SKIN_NAMES[skin.id]]}
                   </Text>
                   {!unlocked && (
-                    <Text style={{ color: theme.subtext, fontSize: 10.5, fontWeight: '600', textAlign: 'center' }}>
-                      {t.unlockAt} ⭐ {skin.starsRequired}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Text style={{ color: theme.subtext, fontSize: 10.5, fontWeight: '600' }}>{t.unlockAt}</Text>
+                      <IconStar size={11} />
+                      <Text style={{ color: theme.subtext, fontSize: 10.5, fontWeight: '600' }}>{skin.starsRequired}</Text>
+                    </View>
                   )}
                 </Pressable>
               );

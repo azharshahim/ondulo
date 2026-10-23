@@ -6,6 +6,9 @@ import { TOTAL_LEVELS } from '../levels/levels';
 import type { Progress } from '../state/storage';
 import type { Dict } from '../state/i18n';
 import type { Theme } from '../ui/theme';
+import {
+  IconCalendar, IconCheck, IconChevronLeft, IconChevronRight, IconLock, IconStar,
+} from '../ui/icons';
 import { sound } from '../audio/sound';
 
 interface LevelMapScreenProps {
@@ -29,12 +32,15 @@ export default function LevelMapScreen({
           onPress={() => { sound.play('click'); onBack(); }}
           style={[styles.backBtn, { backgroundColor: theme.panel, borderColor: theme.panelBorder }]}
         >
-          <Text style={{ color: theme.text, fontSize: 18, fontWeight: '900' }}>‹</Text>
+          <IconChevronLeft size={20} color={theme.text} />
         </Pressable>
         <Text style={{ color: theme.text, fontSize: 21, fontWeight: '900', flex: 1 }}>{t.levels}</Text>
-        <Text style={{ color: theme.subtext, fontWeight: '700' }}>⭐ {
-          Object.values(progress.stars).reduce((a, b) => a + b, 0)
-        }</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+          <IconStar size={16} />
+          <Text style={{ color: theme.subtext, fontWeight: '700' }}>
+            {Object.values(progress.stars).reduce((a, b) => a + b, 0)}
+          </Text>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}>
@@ -43,14 +49,16 @@ export default function LevelMapScreen({
           onPress={() => { sound.play('click'); onDaily(); }}
           style={[styles.dailyCard, { backgroundColor: theme.panel, borderColor: theme.accent }]}
         >
-          <Text style={{ fontSize: 27 }}>📅</Text>
+          <IconCalendar size={28} color={theme.text} />
           <View style={{ flex: 1 }}>
             <Text style={{ color: theme.text, fontWeight: '900', fontSize: 16.5 }}>{t.daily}</Text>
             <Text style={{ color: theme.subtext, fontSize: 12.5, fontWeight: '600' }}>
               {dailyDone ? t.dailyDone : 'Un nouveau niveau chaque jour !'}
             </Text>
           </View>
-          <Text style={{ fontSize: 20 }}>{dailyDone ? '✅' : '›'}</Text>
+          {dailyDone
+            ? <IconCheck size={22} color={theme.accent2} />
+            : <IconChevronRight size={20} color={theme.subtext} />}
         </Pressable>
 
         {/* Grille des niveaux */}
@@ -74,18 +82,23 @@ export default function LevelMapScreen({
                   },
                 ]}
               >
-                <Text style={{
-                  color: locked ? theme.subtext : '#FFF',
-                  fontWeight: '900', fontSize: 16.5,
-                  textShadowColor: 'rgba(0,0,0,0.2)', textShadowRadius: 2,
-                }}>
-                  {locked ? '🔒' : n}
-                </Text>
-                {!locked && (
-                  <Text style={{ fontSize: 9.5, letterSpacing: 1, color: '#FFC93C', marginTop: 1 }}>
-                    {'★'.repeat(stars)}
-                    <Text style={{ color: 'rgba(255,255,255,0.4)' }}>{'★'.repeat(3 - stars)}</Text>
+                {locked ? (
+                  <IconLock size={20} color={theme.subtext} />
+                ) : (
+                  <Text style={{
+                    color: '#FFF',
+                    fontWeight: '900', fontSize: 16.5,
+                    textShadowColor: 'rgba(0,0,0,0.2)', textShadowRadius: 2,
+                  }}>
+                    {n}
                   </Text>
+                )}
+                {!locked && (
+                  <View style={{ flexDirection: 'row', gap: 1.5, marginTop: 2 }}>
+                    {[1, 2, 3].map((i) => (
+                      <IconStar key={i} size={10} color={i <= stars ? '#FFC93C' : 'rgba(255,255,255,0.35)'} />
+                    ))}
+                  </View>
                 )}
               </Pressable>
             );

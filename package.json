@@ -35,7 +35,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test:levels": "tsx tools/validate-levels.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:engine": "tsx tools/test-engine.ts"
   },
   "private": true
 }
