@@ -56,7 +56,8 @@ const samples: Record<string, string> = {
   'slack': 'xoxb-' + '1234567890-abcdefghij',
   'openai': 'sk-' + 'A'.repeat(32),
   'google-api': 'AIza' + 'B'.repeat(35),
-  'private-key': '-----BEGIN RSA PRIVATE KEY-----',
+  // Assemblé à l'exécution : aucun en-tête PEM littéral n'est versionné.
+  'private-key': '-----BEGIN ' + 'RSA PRIVATE KEY-----',
   'jwt': 'eyJ' + 'a'.repeat(12) + '.eyJ' + 'b'.repeat(12) + '.' + 'c'.repeat(12),
   'expo-token': 'EXPO_TOKEN=' + 'a1b2c3d4e5f6g7h8',
   'generic-assign': 'api_key = "' + 'k'.repeat(20) + '"',
@@ -79,6 +80,10 @@ if (selfFailures) {
   process.exit(1);
 }
 
+/** Le scanneur contient par nature des échantillons de motifs : il s'auto-exclut. */
+const SELF_FILE = 'tools/scan-secrets.ts';
+const excluded: string[] = [];
+
 const blockingHits: string[] = [];
 const infoHits: string[] = [];
 
@@ -96,6 +101,10 @@ for (const commit of commits) {
       const match = raw.match(/^([0-9a-f]+):([^:]+):(\d+):(.*)$/);
       if (!match) continue;
       const [, sha, file, lineNo, content] = match;
+      if (file === SELF_FILE) {
+        if (!excluded.includes(rule.id)) excluded.push(rule.id);
+        continue;
+      }
       const key = `${rule.id}|${file}|${content.trim()}`;
       if (seen.has(key)) continue;      // même contenu dans un autre commit
       seen.add(key);
@@ -120,6 +129,9 @@ const missingIgnores = ignored.filter((pat) => !gitignore.includes(pat));
 console.log(`── .gitignore couvre ${ignored.length - missingIgnores.length}/${ignored.length} motifs de secrets` +
   (missingIgnores.length ? ` (manquants : ${missingIgnores.join(', ')})` : ''));
 
+if (excluded.length) {
+  console.log(`── Auto-exclusion de ${SELF_FILE} (échantillons de motifs) : ${excluded.join(', ')} ──`);
+}
 console.log(`── Motifs bloquants : ${blockingHits.length} — signaux informatifs : ${infoHits.length} ──`);
 blockingHits.forEach((h) => console.log(`  ✗ ${h}`));
 infoHits.slice(0, 30).forEach((h) => console.log(`  · ${h}`));
