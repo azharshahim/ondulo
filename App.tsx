@@ -18,6 +18,8 @@ import ParentalDashboardScreen from './src/screens/ParentalDashboardScreen';
 import SleepScreen from './src/screens/SleepScreen';
 import PrivacyScreen from './src/screens/PrivacyScreen';
 import TutorialScreen from './src/screens/TutorialScreen';
+import ParentalGate from './src/screens/ParentalGate';
+import PinScreen from './src/screens/PinScreen';
 import {
   loadLang, loadDict, isRTL, type Lang, type Dict,
 } from './src/i18n';
@@ -42,6 +44,7 @@ type Route =
   | { name: 'profiles' }
   | { name: 'parental' }
   | { name: 'privacy' }
+  | { name: 'pin' }
   | { name: 'sleep' }
   | { name: 'tutorial' }
   | { name: 'game'; levelNumber: number | null }; // null = défi quotidien
@@ -114,6 +117,11 @@ export default function App() {
   const [profiles, setProfiles] = useState<ProfilesData | null>(null);
   const [parental, setParental] = useState<ParentalSettings | null>(null);
   const [lang, setLang] = useState<Lang>('en');
+  // ── Porte parentale : aucun écran réservé aux adultes n'est atteignable
+  // sans PIN ou barrière de calcul. Le déverrouillage ne vaut que pour la
+  // session en cours (il est oublié au rechargement).
+  const [parentalUnlocked, setParentalUnlocked] = useState(false);
+  const [gate, setGate] = useState<null | 'parental' | 'privacy'>(null);
   const [dict, setDict] = useState<Dict>({});
 
   // Verrouillage de la page web (défilement, zoom, hauteur dynamique).
@@ -220,6 +228,20 @@ export default function App() {
     if (palette === 'neon') return THEMES.neon;
     return THEMES.jour;
   }, [settings, appearanceEff]);
+  // Toute entrée vers un écran « adulte » passe par la porte parentale.
+  const requireParental = useCallback((intent: 'parental' | 'privacy', then: () => void) => {
+    if (parentalUnlocked) { then(); return; }
+    setGate(intent);
+  }, [parentalUnlocked]);
+
+  const onGateSuccess = useCallback(() => {
+    const intent = gate;
+    setParentalUnlocked(true);
+    setGate(null);
+    if (intent === 'privacy') setRoute({ name: 'privacy' });
+    else if (intent === 'parental') setRoute({ name: 'parental' });
+  }, [gate]);
+
   const t = dict;
   const stars = progress ? totalStars(progress) : 0;
   const dailyDone = !!progress?.daily[todayKey()];
@@ -229,7 +251,14 @@ export default function App() {
       <SafeAreaProvider>
         <StatusBar style={theme.isDark ? 'light' : 'dark'} />
         <Background theme={theme} dyslexic={settings?.dyslexicFont ?? false}>
-          {!settings || !progress ? (
+          {gate ? (
+            <ParentalGate
+              theme={theme}
+              t={t}
+              onSuccess={onGateSuccess}
+              onCancel={() => setGate(null)}
+            />
+          ) : !settings || !progress ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
               <ActivityIndicator size="large" color={theme.accent2} />
             </View>
@@ -259,7 +288,7 @@ export default function App() {
               onDaily={() => setRoute({ name: 'game', levelNumber: null })}
               onSettings={() => setRoute({ name: 'settings' })}
               onProfiles={() => setRoute({ name: 'profiles' })}
-              onParental={() => setRoute({ name: 'parental' })}
+              onParental={() => requireParental('parental', () => setRoute({ name: 'parental' }))}
             />
           ) : route.name === 'levels' ? (
             <LevelMapScreen
@@ -319,17 +348,19 @@ export default function App() {
                   return next;
                 });
               }}
-              onSetPin={() => setRoute({ name: 'sleep' })}
-              onPrivacy={() => setRoute({ name: 'privacy' })}
+              onSetPin={() => setRoute({ name: 'pin' })}
+              onPrivacy={() => requireParental('privacy', () => setRoute({ name: 'privacy' }))}
               onBack={() => setRoute({ name: 'home' })}
             />
+          ) : route.name === 'pin' ? (
+            <PinScreen theme={theme} t={t} onBack={() => setRoute({ name: 'parental' })} />
           ) : route.name === 'privacy' ? (
             <PrivacyScreen theme={theme} t={t} onBack={() => setRoute({ name: 'parental' })} />
           ) : route.name === 'sleep' ? (
             <SleepScreen
               theme={theme}
               t={t}
-              onExtend={() => setRoute({ name: 'parental' })}
+              onExtend={() => requireParental('parental', () => setRoute({ name: 'parental' }))}
             />
           ) : (
             <GameScreen

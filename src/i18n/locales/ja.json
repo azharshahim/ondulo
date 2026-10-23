@@ -125,5 +125,12 @@
   "tutorialTailText": "Saisis la queue pour glisser le serpent à reculons.",
   "tutorialHole": "Mets les couleurs ensemble !",
   "tutorialHoleText": "Chaque serpent doit entrer dans le trou de sa couleur.",
-  "dyslexicFont": "読みやすいフォント（ディスレクシア）"
+  "dyslexicFont": "読みやすいフォント（ディスレクシア）",
+  "gateTitle": "保護者エリア",
+  "gateText": "大人専用です。計算を解くか保護者コードを入力してください。",
+  "gatePinPrompt": "保護者コードを入力",
+  "gateWrong": "コードが違います",
+  "gateLocked": "試行回数が多すぎます。次はこちら:",
+  "gateMath": "計算してください:",
+  "gateAnswer": "答え"
 }

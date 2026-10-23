@@ -125,5 +125,12 @@
   "tutorialTailText": "Saisis la queue pour glisser le serpent à reculons.",
   "tutorialHole": "Mets les couleurs ensemble !",
   "tutorialHoleText": "Chaque serpent doit entrer dans le trou de sa couleur.",
-  "dyslexicFont": "Okunabilir yazı (disleksi)"
+  "dyslexicFont": "Okunabilir yazı (disleksi)",
+  "gateTitle": "Ebeveyn alanı",
+  "gateText": "Yalnızca yetişkinler için. Devam etmek için işlemi çözün veya ebeveyn kodunu girin.",
+  "gatePinPrompt": "Ebeveyn kodunu girin",
+  "gateWrong": "Kod yanlış",
+  "gateLocked": "Çok fazla deneme. Tekrar deneyin:",
+  "gateMath": "Kaç eder",
+  "gateAnswer": "Cevap"
 }

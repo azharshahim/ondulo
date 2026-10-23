@@ -125,5 +125,12 @@
   "tutorialTailText": "Tu peux aussi saisir la queue et glisser le serpent à reculons.",
   "tutorialHole": "Mets les couleurs ensemble !",
   "tutorialHoleText": "Chaque serpent doit entrer dans le trou de sa couleur.",
-  "dyslexicFont": "Police lisible (dyslexie)"
+  "dyslexicFont": "Police lisible (dyslexie)",
+  "gateTitle": "Espace parents",
+  "gateText": "Réservé aux adultes. Réponds au calcul ou saisis le code parent pour continuer.",
+  "gatePinPrompt": "Saisis le code parent",
+  "gateWrong": "Code incorrect",
+  "gateLocked": "Trop d’essais. Réessaie dans",
+  "gateMath": "Combien font",
+  "gateAnswer": "Réponse"
 }

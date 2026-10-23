@@ -125,5 +125,12 @@
   "tutorialTailText": "Saisis la queue pour glisser le serpent à reculons.",
   "tutorialHole": "Mets les couleurs ensemble !",
   "tutorialHoleText": "Chaque serpent doit entrer dans le trou de sa couleur.",
-  "dyslexicFont": "Font terbaca (disleksia)"
+  "dyslexicFont": "Font terbaca (disleksia)",
+  "gateTitle": "Area orang tua",
+  "gateText": "Khusus dewasa. Selesaikan hitungan atau masukkan kode orang tua untuk lanjut.",
+  "gatePinPrompt": "Masukkan kode orang tua",
+  "gateWrong": "Kode salah",
+  "gateLocked": "Terlalu banyak percobaan. Coba lagi dalam",
+  "gateMath": "Berapa hasil dari",
+  "gateAnswer": "Jawaban"
 }

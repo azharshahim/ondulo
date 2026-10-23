@@ -61,6 +61,53 @@ export async function verifyPin(pin: string): Promise<boolean> {
   return hashed === stored;
 }
 
+/** Un code parental existe-t-il ? (sinon : barrière par question de calcul) */
+export async function hasPin(): Promise<boolean> {
+  return (await getPinHash()) !== null;
+}
+
+/** Enregistre un nouveau code parental (4 à 6 chiffres). */
+export async function setPin(pin: string): Promise<boolean> {
+  if (!/^\d{4,6}$/.test(pin)) return false;
+  await storePinHash(await hashPin(pin));
+  await resetPinFails();
+  return true;
+}
+
+export interface PinCheckResult {
+  ok: boolean;
+  /** Vrai si le verrouillage progressif est actif après cette tentative. */
+  locked: boolean;
+  /** Instant de fin de verrouillage (ms epoch), 0 si non verrouillé. */
+  lockedUntil: number;
+  /** Tentatives restantes avant le prochain verrouillage. */
+  failsLeft: number;
+}
+
+/**
+ * Vérifie un PIN en appliquant le verrouillage progressif.
+ * Point d'entrée unique pour l'interface (aucun appel direct à verifyPin).
+ */
+export async function checkPin(pin: string): Promise<PinCheckResult> {
+  const { lockedUntil } = await getPinStatus();
+  if (Date.now() < lockedUntil) {
+    return { ok: false, locked: true, lockedUntil, failsLeft: 0 };
+  }
+  const ok = await verifyPin(pin);
+  if (ok) {
+    await resetPinFails();
+    return { ok: true, locked: false, lockedUntil: 0, failsLeft: 5 };
+  }
+  const lockMs = await registerPinFail();
+  const after = await getPinStatus();
+  return {
+    ok: false,
+    locked: lockMs > 0,
+    lockedUntil: lockMs > 0 ? Date.now() + lockMs : 0,
+    failsLeft: lockMs > 0 ? 0 : Math.max(0, 5 - after.fails),
+  };
+}
+
 /** Efface le hachage du PIN (réinitialisation). */
 export async function clearPinHash(): Promise<void> {
   try {

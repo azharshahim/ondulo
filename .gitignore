@@ -47,3 +47,6 @@ yarn-error.*
 
 # Généré pour le test local (QR Expo Go du tunnel, URL éphémère)
 qr-expo-go.png
+
+# Journal réseau du test profil enfant (artefact de preuve, versionné)
+!reports/child-network.log

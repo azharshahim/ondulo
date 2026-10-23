@@ -1,0 +1,22 @@
+# Journal des requêtes réseau — profil enfant (Ondulo)
+# généré : 2026-10-23T14:52:08.376Z
+# URL : http://localhost:4173/serpent-puzzle/
+# origine de référence : localhost:4173
+# niveau joué : 1 (4 coups, terminé = true)
+# requêtes totales : 12 — domaines tiers : 0
+
+MÉTHODE  HÔTE                    TYPE      PHASE
+GET      localhost:4173          document  B (partie enfant)
+GET      localhost:4173          script    B (partie enfant)
+GET      localhost:4173          media     B (partie enfant)
+GET      localhost:4173          media     B (partie enfant)
+GET      localhost:4173          media     B (partie enfant)
+GET      localhost:4173          media     B (partie enfant)
+GET      localhost:4173          media     B (partie enfant)
+GET      localhost:4173          document  C (porte parentale)
+GET      localhost:4173          script    C (porte parentale)
+GET      localhost:4173          media     C (porte parentale)
+GET      localhost:4173          media     C (porte parentale)
+GET      localhost:4173          media     C (porte parentale)
+
+RÉSULTAT : AUCUNE requête vers un domaine tiers

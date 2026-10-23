@@ -125,5 +125,12 @@
   "tutorialTailText": "You can also grab the tail and slide the snake backward.",
   "tutorialHole": "Match the colors!",
   "tutorialHoleText": "Each snake must enter the hole of its own color.",
-  "dyslexicFont": "Readable font (dyslexia)"
+  "dyslexicFont": "Readable font (dyslexia)",
+  "gateTitle": "Parents' area",
+  "gateText": "Adults only. Solve the sum or enter the parent code to continue.",
+  "gatePinPrompt": "Enter the parent code",
+  "gateWrong": "Wrong code",
+  "gateLocked": "Too many tries. Try again in",
+  "gateMath": "How much is",
+  "gateAnswer": "Answer"
 }

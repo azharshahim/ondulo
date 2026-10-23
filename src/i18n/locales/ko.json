@@ -125,5 +125,12 @@
   "tutorialTailText": "Saisis la queue pour glisser le serpent à reculons.",
   "tutorialHole": "Mets les couleurs ensemble !",
   "tutorialHoleText": "Chaque serpent doit entrer dans le trou de sa couleur.",
-  "dyslexicFont": "가독성 좋은 글씨 (ディスレクシア)"
+  "dyslexicFont": "가독성 좋은 글씨 (ディスレクシア)",
+  "gateTitle": "보호자 구역",
+  "gateText": "성인 전용입니다. 계산을 풀거나 보호자 코드를 입력하세요.",
+  "gatePinPrompt": "보호자 코드 입력",
+  "gateWrong": "잘못된 코드",
+  "gateLocked": "시도 횟수가 많습니다. 다시 시도:",
+  "gateMath": "계산하세요:",
+  "gateAnswer": "정답"
 }

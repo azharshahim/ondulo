@@ -125,5 +125,12 @@
   "tutorialTailText": "Saisis la queue pour glisser le serpent à reculons.",
   "tutorialHole": "Mets les couleurs ensemble !",
   "tutorialHoleText": "Chaque serpent doit entrer dans le trou de sa couleur.",
-  "dyslexicFont": "خط مقروء (عسر القراءة)"
+  "dyslexicFont": "خط مقروء (عسر القراءة)",
+  "gateTitle": "مساحة الوالدين",
+  "gateText": "للبالغين فقط. حل العملية أو أدخل رمز الوالدين للمتابعة.",
+  "gatePinPrompt": "أدخل رمز الوالدين",
+  "gateWrong": "رمز غير صحيح",
+  "gateLocked": "محاولات كثيرة. أعد المحاولة بعد",
+  "gateMath": "كم يساوي",
+  "gateAnswer": "الجواب"
 }
