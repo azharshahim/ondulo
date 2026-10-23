@@ -27,7 +27,15 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "experiments": {
+      "baseUrl": "/serpent-puzzle"
     },
     "plugins": ["expo-audio"]
   }
