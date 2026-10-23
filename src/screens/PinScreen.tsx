@@ -92,8 +92,8 @@ export default function PinScreen({ theme, t, onBack }: PinScreenProps) {
           style={[styles.input, { color: theme.text, backgroundColor: theme.panel, borderColor: theme.panelBorder }]}
         />
 
-        {err ? <Text testID="pin-error" style={{ color: '#E4572E', fontWeight: '800', marginTop: 10 }}>{err}</Text> : null}
-        {msg ? <Text testID="pin-ok" style={{ color: theme.accent2, fontWeight: '800', marginTop: 10 }}>{msg}</Text> : null}
+        {err ? <Text testID="pin-error" style={{ color: theme.error, fontWeight: '800', marginTop: 10 }}>{err}</Text> : null}
+        {msg ? <Text testID="pin-ok" style={{ color: theme.accentText, fontWeight: '800', marginTop: 10 }}>{msg}</Text> : null}
 
         <Pressable
           testID="pin-save"

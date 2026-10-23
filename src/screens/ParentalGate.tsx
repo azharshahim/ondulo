@@ -151,7 +151,7 @@ export default function ParentalGate({
         ) : (
           <>
             <Text style={{ color: theme.text, fontSize: 15, fontWeight: '800', marginTop: 18 }}>{t.gateMath}</Text>
-            <Text testID="gate-challenge" style={{ color: theme.accent2, fontSize: 30, fontWeight: '900', marginTop: 6, letterSpacing: 2 }}>
+            <Text testID="gate-challenge" style={{ color: theme.accentText, fontSize: 30, fontWeight: '900', marginTop: 6, letterSpacing: 2 }}>
               {challenge.question}
             </Text>
             <TextInput
@@ -178,7 +178,7 @@ export default function ParentalGate({
         )}
 
         {error ? (
-          <Text testID="gate-error" style={{ color: '#E4572E', fontWeight: '800', fontSize: 13.5, marginTop: 12, textAlign: 'center' }}>
+          <Text testID="gate-error" style={{ color: theme.error, fontWeight: '800', fontSize: 13.5, marginTop: 12, textAlign: 'center' }}>
             {locked ? `${error} ${secondsLeft}s` : error}
           </Text>
         ) : null}
