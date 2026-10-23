@@ -22,7 +22,7 @@ import ParentalGate from './src/screens/ParentalGate';
 import PinScreen from './src/screens/PinScreen';
 import PauseReminder from './src/ui/PauseReminder';
 import {
-  loadLang, loadDict, isRTL, type Lang, type Dict,
+  loadLang, loadDict, saveLang, isRTL, type Lang, type Dict,
 } from './src/i18n';
 import {
   loadProgress, loadSettings, saveProgress, saveSettings, totalStars,
@@ -150,7 +150,8 @@ export default function App() {
       ]);
       setLang(lang);
       setDict(loadDict(lang));
-      setSettings(s);
+      // une seule source de vérité : la langue effective (sauvegardée ou détectée)
+      setSettings({ ...s, lang });
       setProgress(p);
       setProfiles(prof);
       setParental(par);
@@ -174,6 +175,11 @@ export default function App() {
   }, [settings]);
 
   const patchSettings = useCallback((patch: Partial<Settings>) => {
+    if (patch.lang) {
+      setLang(patch.lang);
+      setDict(loadDict(patch.lang));
+      void saveLang(patch.lang);
+    }
     setSettings((prev) => {
       if (!prev) return prev;
       const next = { ...prev, ...patch };
