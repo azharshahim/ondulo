@@ -17,6 +17,7 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import ParentalDashboardScreen from './src/screens/ParentalDashboardScreen';
 import SleepScreen from './src/screens/SleepScreen';
 import PrivacyScreen from './src/screens/PrivacyScreen';
+import TutorialScreen from './src/screens/TutorialScreen';
 import {
   loadLang, loadDict, isRTL, type Lang, type Dict,
 } from './src/i18n';
@@ -42,6 +43,7 @@ type Route =
   | { name: 'parental' }
   | { name: 'privacy' }
   | { name: 'sleep' }
+  | { name: 'tutorial' }
   | { name: 'game'; levelNumber: number | null }; // null = défi quotidien
 
 /**
@@ -210,6 +212,20 @@ export default function App() {
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
               <ActivityIndicator size="large" color={theme.accent2} />
             </View>
+          ) : route.name === 'tutorial' ? (
+            <TutorialScreen
+              theme={theme}
+              t={t}
+              onDone={() => setRoute({ name: 'profiles' })}
+              onSkip={() => setRoute({ name: 'profiles' })}
+            />
+          ) : (profiles === null || profiles.profiles.length === 0) && route.name === 'home' ? (
+            <TutorialScreen
+              theme={theme}
+              t={t}
+              onDone={() => setRoute({ name: 'profiles' })}
+              onSkip={() => setRoute({ name: 'profiles' })}
+            />
           ) : route.name === 'home' ? (
             <HomeScreen
               theme={theme}

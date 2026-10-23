@@ -118,5 +118,11 @@
   "profilePick": "Choisir un profil",
   "profileCreate": "Créer un profil",
   "parent": "Parent",
-  "child": "Enfant"
+  "child": "Enfant",
+  "tutorialHead": "Glisser par la tête",
+  "tutorialHeadText": "Saisis le serpent par la tête et glisse-le vers un trou.",
+  "tutorialTail": "Ou par la queue",
+  "tutorialTailText": "Tu peux aussi saisir la queue et glisser le serpent à reculons.",
+  "tutorialHole": "Mets les couleurs ensemble !",
+  "tutorialHoleText": "Chaque serpent doit entrer dans le trou de sa couleur."
 }

@@ -118,5 +118,11 @@
   "profilePick": "Pick a profile",
   "profileCreate": "Create profile",
   "parent": "Parent",
-  "child": "Child"
+  "child": "Child",
+  "tutorialHead": "Slide by the head",
+  "tutorialHeadText": "Grab the snake by its head and slide it into a hole.",
+  "tutorialTail": "Or by the tail",
+  "tutorialTailText": "You can also grab the tail and slide the snake backward.",
+  "tutorialHole": "Match the colors!",
+  "tutorialHoleText": "Each snake must enter the hole of its own color."
 }
