@@ -1,11 +1,11 @@
 // Petit serveur statique de dev pour les tests navigateur.
-// Sert `dist/` sous le préfixe demandé (ex. /serpent-puzzle, /ondulo).
+// Sert `dist/` sous le préfixe demandé (ex. /ondulo).
 // Usage : tsx tools/serve-dist.ts <prefix> <port>
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 
-const prefix = (process.argv[2] ?? '/serpent-puzzle').replace(/\/$/, '');
+const prefix = (process.argv[2] ?? '/ondulo').replace(/\/$/, '');
 const port = Number(process.argv[3] ?? 4173);
 const root = join(process.cwd(), 'dist');
 

@@ -33,7 +33,7 @@
       "policy": "sdkVersion"
     },
     "experiments": {
-      "baseUrl": "/serpent-puzzle"
+      "baseUrl": "/ondulo"
     },
     "plugins": ["expo-audio", "expo-localization", "expo-secure-store"]
   }

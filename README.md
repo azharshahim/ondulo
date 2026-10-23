@@ -7,7 +7,7 @@ dans l'ordre des mouvements. Quand tous les serpents sont rentrés, le niveau
 est gagné, avec 1 à 3 étoiles selon le nombre de coups (comparé à l'optimal
 calculé par le solveur).
 
-🎮 **Démo web jouable (GitHub Pages)** : https://azharshahim.github.io/serpent-puzzle/
+🎮 **Démo web jouable (GitHub Pages)** : https://azharshahim.github.io/ondulo/
 📱 **Mobile** : voir « Tester immédiatement » ci-dessous (Expo Go) ; publication
 EAS Update décrite en fin de document.
 
@@ -18,7 +18,7 @@ Prérequis : Node.js ≥ 20 et l'application **Expo Go** sur le téléphone
 [iOS](https://apps.apple.com/app/expo-go/id982107779)).
 
 ```bash
-cd serpent-puzzle
+cd ondulo
 npm install
 npx expo start
 ```
@@ -114,14 +114,38 @@ tools/        validation hors-ligne des 60 niveaux (npm run test:levels)
 assets/sounds bruitages et musique générés sur mesure (WAV)
 ```
 
+## Déployer la version web (GitHub Pages)
+
+Le site est servi depuis la branche `gh-pages`, sous le préfixe `/ondulo/`
+(`experiments.baseUrl` dans `app.json`). Le nom du dépôt GitHub est `ondulo`,
+le site est donc à l'adresse https://azharshahim.github.io/ondulo/.
+
+```bash
+npm ci
+npm run build:web      # expo export --platform web + titre/meta description
+npm run test:web       # vérifie dist/index.html (titre, description, préfixe)
+```
+
+Publier `dist/` sur `gh-pages` (jamais de `--force` sans sauvegarde) :
+
+```bash
+git worktree add /tmp/gh-pages gh-pages
+rsync -a --delete dist/ /tmp/gh-pages/
+cd /tmp/gh-pages && git add -A && git commit -m "Web : export /ondulo" && git push
+```
+
+> Le préfixe `/ondulo/` ne fonctionne qu'une fois le dépôt renommé en
+> `ondulo` sur GitHub : tant que le renommage n'est pas fait, le site continue
+> de répondre sur l'ancien préfixe `/serpent-puzzle/`.
+
 ## Publier une mise à jour mobile avec EAS Update
 
 Le projet est déjà préparé (`expo-updates` installé, `runtimeVersion` aligné
 sur le SDK). Il faut un compte Expo gratuit (impossible à créer pour vous) :
 
 ```bash
-git clone https://github.com/azharshahim/serpent-puzzle.git
-cd serpent-puzzle
+git clone https://github.com/azharshahim/ondulo.git
+cd ondulo
 npm install
 npx eas-cli@latest login              # ou créer un compte sur https://expo.dev
 npx eas-cli@latest init               # associe le projet à votre compte

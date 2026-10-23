@@ -18,7 +18,7 @@ import { solve } from '../src/game/solver';
 import { HANDCRAFTED } from '../src/levels/handcrafted';
 import type { GameState, LevelDef, Move } from '../src/game/types';
 
-const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:4173/serpent-puzzle/';
+const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:4173/ondulo/';
 const OUT_DIR = 'reports';
 
 let passed = 0;

@@ -52,5 +52,21 @@ upsertMeta(/<meta\s+property=["']og:description["'][^>]*>/i,
 // 3. Langue du document (langue par défaut de l'application).
 html = html.replace(/<html([^>]*)lang=["'][^"']*["']/i, '<html$1lang="fr"');
 
+// 4. Réinitialisation de base AVANT le premier rendu.
+//    Sans elle, le `margin: 8px` par défaut du body est retiré par les
+//    correctifs web d'App.tsx une fois React monté : le body passe de
+//    398x888 à 414x896 et provoque un layout shift mesuré (CLS ≈ 0,0089).
+//    Ces règles reproduisent exactement celles de installWebFixes().
+const RESET_ID = 'ondulo-base-reset';
+if (!html.includes(`id="${RESET_ID}"`)) {
+  const css = [
+    'html,body{margin:0;padding:0;height:100dvh;overflow:hidden;overscroll-behavior:none;touch-action:pan-x pan-y;}',
+    'body{position:fixed;inset:0;width:100%;}',
+    '#root{height:100dvh;}',
+    '*{-webkit-tap-highlight-color:transparent;}',
+  ].join('');
+  html = html.replace('</head>', `  <style id="${RESET_ID}">${css}</style>\n  </head>`);
+}
+
 writeFileSync(file, html, 'utf8');
 console.log(`✓ ${file} : titre « ${SITE_TITLE} », meta description et Open Graph écrits, lang="fr"`);

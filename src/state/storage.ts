@@ -70,6 +70,10 @@ export interface Progress {
 
 export const DEFAULT_PROGRESS: Progress = { stars: {}, unlocked: 1, daily: {} };
 
+// Clés HISTORIQUES (ancien nom du projet) : NE PAS renommer. Elles contiennent
+// la progression et les réglages déjà enregistrés sur les appareils ; les
+// changer effacerait la sauvegarde des joueurs existants. Les nouvelles clés
+// (profils, parental, langue) utilisent déjà le préfixe @ondulo.
 const SETTINGS_KEY = '@serpent-puzzle/settings';
 const PROGRESS_KEY = '@serpent-puzzle/progress';
 
