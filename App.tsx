@@ -79,6 +79,14 @@ function installWebFixes() {
       'width=device-width, initial-scale=1, viewport-fit=cover',
     );
   }
+  // Balise meta description (SEO / partage).
+  const desc = doc.querySelector('meta[name="description"]');
+  if (!desc) {
+    const m = doc.createElement('meta');
+    m.setAttribute('name', 'description');
+    m.setAttribute('content', 'Ondulo : jeu de réflexion familial sans minuteur. Glisse les serpents dans leurs trous !');
+    doc.head.appendChild(m);
+  }
   // Détection du mode clair/sombre du système (web) : expose __onduloNight.
   try {
     if (window.matchMedia) {
