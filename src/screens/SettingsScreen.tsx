@@ -4,11 +4,12 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-nat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SKINS, type Settings, type SkinId, type ThemeId } from '../state/storage';
-import type { Dict } from '../state/i18n';
+import type { Dict } from '../i18n';
+import { LANG_LIST, type Lang } from '../i18n';
 import type { Theme } from '../ui/theme';
 import {
   IconChevronLeft, IconEye, IconLock, IconMoon, IconMusic, IconSnake, IconSound,
-  IconSparkle, IconStar, IconSun, IconVibrate,
+  IconAuto, IconCalendar, IconSparkle, IconStar, IconSun, IconText, IconVibrate,
 } from '../ui/icons';
 import { sound } from '../audio/sound';
 
@@ -97,24 +98,54 @@ export default function SettingsScreen({
           <Row icon={<IconMusic size={21} color={theme.text} />} label={t.music} value={settings.music} onToggle={(v) => onChange({ music: v })} />
           <Row icon={<IconVibrate size={21} color={theme.text} />} label={t.haptics} value={settings.haptics} onToggle={(v) => onChange({ haptics: v })} />
           <Row icon={<IconEye size={21} color={theme.text} />} label={t.colorblind} value={settings.colorblind} onToggle={(v) => onChange({ colorblind: v })} />
+          <Row icon={<IconText size={21} color={theme.text} />} label={t.dyslexicFont} value={settings.dyslexicFont} onToggle={(v) => onChange({ dyslexicFont: v })} />
         </Section>
 
         <Section title={t.language}>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Chip label="FR · Français" selected={settings.lang === 'fr'} onPress={() => onChange({ lang: 'fr' })} />
-            <Chip label="EN · English" selected={settings.lang === 'en'} onPress={() => onChange({ lang: 'en' })} />
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            {LANG_LIST.map((l) => (
+              <Chip
+                key={l.id}
+                label={l.name}
+                selected={settings.lang === l.id}
+                onPress={() => onChange({ lang: l.id })}
+              />
+            ))}
           </View>
         </Section>
 
         <Section title={t.theme}>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Text style={{ color: theme.subtext, fontSize: 12.5, fontWeight: '600', marginBottom: 8 }}>
+            {t.appearanceAuto}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
             {([
-              { id: 'sombre' as ThemeId, label: t.themeDark, icon: <IconMoon size={17} color={settings.theme === 'sombre' ? '#FFF' : theme.text} /> },
-              { id: 'clair' as ThemeId, label: t.themeLight, icon: <IconSun size={17} color={settings.theme === 'clair' ? '#FFF' : theme.text} /> },
-              { id: 'neon' as ThemeId, label: t.themeNeon, icon: <IconSparkle size={17} color={settings.theme === 'neon' ? '#FFF' : theme.text} /> },
+              { id: 'auto' as const, label: t.appearanceAuto, icon: <IconAuto size={17} color={settings.appearance === 'auto' ? '#FFF' : theme.text} /> },
+              { id: 'jour' as const, label: t.appearanceDay, icon: <IconSun size={17} color={settings.appearance === 'jour' ? '#FFF' : theme.text} /> },
+              { id: 'nuit' as const, label: t.appearanceNight, icon: <IconMoon size={17} color={settings.appearance === 'nuit' ? '#FFF' : theme.text} /> },
+              { id: 'scheduled' as const, label: t.appearanceScheduled, icon: <IconCalendar size={17} color={settings.appearance === 'scheduled' ? '#FFF' : theme.text} /> },
             ]).map((th) => (
-              <Chip key={th.id} label={th.label} icon={th.icon} selected={settings.theme === th.id}
-                onPress={() => onChange({ theme: th.id })} />
+              <Chip key={th.id} label={th.label} icon={th.icon} selected={settings.appearance === th.id}
+                onPress={() => onChange({ appearance: th.id })} />
+            ))}
+          </View>
+          {settings.appearance === 'scheduled' && (
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+              <Chip label={`${t.nightStart} 20:00`} selected={true} onPress={() => onChange({ nightStart: 20 * 60 })} />
+              <Chip label={`${t.nightEnd} 07:00`} selected={true} onPress={() => onChange({ nightEnd: 7 * 60 })} />
+            </View>
+          )}
+          <Text style={{ color: theme.subtext, fontSize: 12.5, fontWeight: '600', marginTop: 10, marginBottom: 8 }}>
+            {t.palette}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            {([
+              { id: 'jour' as const, label: t.paletteDay, icon: <IconSun size={17} color={settings.palette === 'jour' ? '#FFF' : theme.text} /> },
+              { id: 'nuit' as const, label: t.paletteNight, icon: <IconMoon size={17} color={settings.palette === 'nuit' ? '#FFF' : theme.text} /> },
+              { id: 'neon' as const, label: t.paletteNeon, icon: <IconSparkle size={17} color={settings.palette === 'neon' ? '#FFF' : theme.text} /> },
+            ]).map((th) => (
+              <Chip key={th.id} label={th.label} icon={th.icon} selected={settings.palette === th.id}
+                onPress={() => onChange({ palette: th.id })} />
             ))}
           </View>
         </Section>

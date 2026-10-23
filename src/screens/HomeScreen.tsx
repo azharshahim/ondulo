@@ -7,10 +7,10 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import type { Dict } from '../state/i18n';
+import type { Dict } from '../i18n';
 import type { Theme } from '../ui/theme';
 import {
-  IconCalendar, IconChevronRight, IconMap, IconPlay, IconSettings, IconStar,
+  IconCalendar, IconChevronRight, IconLock, IconMap, IconPlay, IconSettings, IconSnake, IconStar,
 } from '../ui/icons';
 import { sound } from '../audio/sound';
 
@@ -24,6 +24,8 @@ interface HomeScreenProps {
   onLevels: () => void;
   onDaily: () => void;
   onSettings: () => void;
+  onProfiles: () => void;
+  onParental: () => void;
 }
 
 /** Petit serpent-logo dessiné en vues, qui respire et ondule doucement. */
@@ -108,7 +110,7 @@ function MenuButton({ icon, label, sub, onPress, theme, primary }: {
 }
 
 export default function HomeScreen({
-  theme, t, currentLevel, totalStars, dailyDone, onPlay, onLevels, onDaily, onSettings,
+  theme, t, currentLevel, totalStars, dailyDone, onPlay, onLevels, onDaily, onSettings, onProfiles, onParental,
 }: HomeScreenProps) {
   const insets = useSafeAreaInsets();
   const click = (fn: () => void) => () => { sound.play('click'); fn(); };
@@ -116,9 +118,9 @@ export default function HomeScreen({
     <View style={{ flex: 1, paddingTop: insets.top + 26, paddingBottom: insets.bottom + 18, paddingHorizontal: 24 }}>
       <View style={{ alignItems: 'center', marginTop: 12 }}>
         <LogoSnake />
-        <Text style={{ color: theme.text, fontSize: 35, fontWeight: '900', letterSpacing: 0.5, textAlign: 'center' }}>
-          Serpent <Text style={{ color: theme.accent }}>Puzzle</Text>
-        </Text>
+          <Text style={{ color: theme.text, fontSize: 35, fontWeight: '900', letterSpacing: 0.5, textAlign: 'center' }}>
+            Ondulo
+          </Text>
         <Text style={{ color: theme.subtext, fontSize: 14.5, fontWeight: '600', marginTop: 5, textAlign: 'center' }}>
           {t.tagline}
         </Text>
@@ -132,6 +134,8 @@ export default function HomeScreen({
         <MenuButton icon={<IconPlay size={24} color="#FFF" />} label={t.play} sub={`${t.level} ${currentLevel}`} theme={theme} primary onPress={click(onPlay)} />
         <MenuButton icon={<IconMap size={24} color={theme.text} />} label={t.levels} theme={theme} onPress={click(onLevels)} />
         <MenuButton icon={<IconCalendar size={24} color={theme.text} />} label={t.daily} sub={dailyDone ? t.dailyDone : undefined} theme={theme} onPress={click(onDaily)} />
+        <MenuButton icon={<IconSnake size={24} color={theme.text} />} label={t.profiles} theme={theme} onPress={click(onProfiles)} />
+        <MenuButton icon={<IconLock size={24} color={theme.text} />} label={t.parentalDashboard} theme={theme} onPress={click(onParental)} />
         <MenuButton icon={<IconSettings size={24} color={theme.text} />} label={t.settings} theme={theme} onPress={click(onSettings)} />
       </View>
 

@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TOTAL_LEVELS } from '../levels/levels';
 import type { Progress } from '../state/storage';
-import type { Dict } from '../state/i18n';
+import type { Dict } from '../i18n';
 import type { Theme } from '../ui/theme';
 import {
   IconCalendar, IconCheck, IconChevronLeft, IconChevronRight, IconLock, IconStar,

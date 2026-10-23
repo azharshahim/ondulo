@@ -1,6 +1,6 @@
-# 🐍 Serpent Puzzle — jeu de réflexion (Android + iOS)
+# 🐍 Ondulo — jeu de réflexion familial (Android + iOS)
 
-Puzzle **sans minuteur** : sur une grille aux formes irrégulières, fais glisser
+Jeu **sans minuteur** : sur une grille aux formes irrégulières, fais glisser
 chaque serpent coloré (par la tête ou par la queue) pour qu'il entre dans un
 trou **de sa couleur**. Les serpents se bloquent entre eux : tout l'art est
 dans l'ordre des mouvements. Quand tous les serpents sont rentrés, le niveau

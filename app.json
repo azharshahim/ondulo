@@ -1,25 +1,25 @@
 {
   "expo": {
-    "name": "Serpent Puzzle",
-    "slug": "serpent-puzzle",
+    "name": "Ondulo",
+    "slug": "ondulo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
-    "scheme": "serpentpuzzle",
+    "userInterfaceStyle": "automatic",
+    "scheme": "ondulo",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#141433"
+      "backgroundColor": "#0E1233"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.serpentpuzzle.app"
+      "bundleIdentifier": "com.ondulo.app"
     },
     "android": {
-      "package": "com.serpentpuzzle.app",
+      "package": "com.ondulo.app",
       "adaptiveIcon": {
-        "backgroundColor": "#141433",
+        "backgroundColor": "#0E1233",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -27,9 +27,7 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "metro",
-      "output": "single"
+      "favicon": "./assets/favicon.png"
     },
     "runtimeVersion": {
       "policy": "sdkVersion"
@@ -37,6 +35,6 @@
     "experiments": {
       "baseUrl": "/serpent-puzzle"
     },
-    "plugins": ["expo-audio"]
+    "plugins": ["expo-audio", "expo-localization", "expo-secure-store"]
   }
 }
