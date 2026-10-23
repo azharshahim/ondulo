@@ -45,6 +45,7 @@
     "test:engine": "tsx tools/test-engine.ts",
     "test:child": "tsx tools/test-child.ts",
     "test:pin": "tsx tools/test-pin.ts",
+    "test:time": "tsx tools/test-time.ts",
     "serve:dist": "tsx tools/serve-dist.ts"
   },
   "private": true

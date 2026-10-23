@@ -132,5 +132,6 @@
   "gateWrong": "密码错误",
   "gateLocked": "尝试次数过多，请稍后重试：",
   "gateMath": "请计算：",
-  "gateAnswer": "答案"
+  "gateAnswer": "答案",
+  "takeBreak": "休息一下"
 }

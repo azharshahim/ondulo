@@ -132,5 +132,6 @@
   "gateWrong": "Kode salah",
   "gateLocked": "Terlalu banyak percobaan. Coba lagi dalam",
   "gateMath": "Berapa hasil dari",
-  "gateAnswer": "Jawaban"
+  "gateAnswer": "Jawaban",
+  "takeBreak": "Istirahat dulu"
 }

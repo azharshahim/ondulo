@@ -132,5 +132,6 @@
   "gateWrong": "Kod yanlış",
   "gateLocked": "Çok fazla deneme. Tekrar deneyin:",
   "gateMath": "Kaç eder",
-  "gateAnswer": "Cevap"
+  "gateAnswer": "Cevap",
+  "takeBreak": "Mola ver"
 }

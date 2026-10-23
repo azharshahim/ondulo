@@ -132,5 +132,6 @@
   "gateWrong": "Codice errato",
   "gateLocked": "Troppi tentativi. Riprova tra",
   "gateMath": "Quanto fa",
-  "gateAnswer": "Risposta"
+  "gateAnswer": "Risposta",
+  "takeBreak": "Fai una pausa"
 }

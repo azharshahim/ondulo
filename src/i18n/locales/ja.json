@@ -132,5 +132,6 @@
   "gateWrong": "コードが違います",
   "gateLocked": "試行回数が多すぎます。次はこちら:",
   "gateMath": "計算してください:",
-  "gateAnswer": "答え"
+  "gateAnswer": "答え",
+  "takeBreak": "休憩する"
 }

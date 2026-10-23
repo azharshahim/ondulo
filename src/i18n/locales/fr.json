@@ -132,5 +132,6 @@
   "gateWrong": "Code incorrect",
   "gateLocked": "Trop d’essais. Réessaie dans",
   "gateMath": "Combien font",
-  "gateAnswer": "Réponse"
+  "gateAnswer": "Réponse",
+  "takeBreak": "Faire une pause"
 }

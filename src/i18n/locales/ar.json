@@ -132,5 +132,6 @@
   "gateWrong": "رمز غير صحيح",
   "gateLocked": "محاولات كثيرة. أعد المحاولة بعد",
   "gateMath": "كم يساوي",
-  "gateAnswer": "الجواب"
+  "gateAnswer": "الجواب",
+  "takeBreak": "خذ استراحة"
 }

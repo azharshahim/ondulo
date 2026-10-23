@@ -132,5 +132,6 @@
   "gateWrong": "Falscher Code",
   "gateLocked": "Zu viele Versuche. Neuer Versuch in",
   "gateMath": "Wie viel ist",
-  "gateAnswer": "Antwort"
+  "gateAnswer": "Antwort",
+  "takeBreak": "Pause machen"
 }
